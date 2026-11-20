@@ -1,0 +1,238 @@
+<!doctype html>
+<!--
+  Project page of AMIGO. A static page: this file, assets/ and poster.pdf. All paths are relative,
+  so it works under any address (GitHub Pages serves a project page under /<repository>/).
+
+  The figures are images of the poster (paper_v2/poster.tex), rendered on 2026-11-21. Export them again
+  when the poster changes. Crop boxes are in points from the top left of the A1 page (1684 x 2384 pt);
+  the white around each figure is trimmed, then 20 px are added back.
+    assets/interpretations.png  poster.pdf, box (42, 248, 952, 800)      card 01
+    assets/where.png            poster.pdf, box (1003, 250, 1650, 795)   card 02
+    assets/pipeline.png         figures/poster_method.pdf, whole page    card 03
+    assets/results.png          poster.pdf, box (40, 1462, 1228, 2162)   card 04
+    assets/forks_*.png          figures/poster_forks.pdf, the two plots  card 05
+    assets/qr.png               figures/poster_qr.png (the live demo's address)
+    poster.pdf                  paper_v2/poster.pdf
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AMIGO: Interactive, Ambiguity-Aware Open-Domain Table Retrieval</title>
+<meta name="description" content="AMIGO is an interactive table retrieval system for data lakes. It returns one table set per valid interpretation of an ambiguous question, and asks the user where the question is ambiguous.">
+<meta property="og:title" content="AMIGO: Interactive, Ambiguity-Aware Open-Domain Table Retrieval">
+<meta property="og:description" content="Table retrieval that returns every valid interpretation of an ambiguous question, and asks the user where it is ambiguous.">
+<meta property="og:type" content="website">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23E6332A'/%3E%3Cpath d='M16 7 7.5 25h4l1.6-3.6h5.8L20.5 25h4L16 7Zm-1.4 11.2L16 14.9l1.4 3.3h-2.8Z' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  /* the poster's palette: the blue and the red of the Sorbonne University logo */
+  :root {
+    --navy: #263068; --steel: #4858A8; --sky: #AEB6E0; --mist: #ECEEF9; --page: #EBEDF7;
+    --red: #E6332A; --red-dark: #C4261E; --muted: #5E6570; --white: #FFFFFF;
+    --radius: 22px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--page); color: var(--navy);
+    font: 400 18px/1.6 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--steel); }
+  a:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; border-radius: 6px; }
+  .page { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+
+  /* header */
+  .hero { background: var(--navy); color: var(--white); border-radius: var(--radius); padding: 40px 44px 36px; }
+  .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .name { font: 800 clamp(64px, 11vw, 124px)/0.95 Montserrat, sans-serif; letter-spacing: -0.01em; margin: 0; }
+  .logos { flex: none; background: var(--white); border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; }
+  .logos img { flex: none; height: 44px; width: 47px; }
+  .logos img:first-child { width: 109px; margin-right: 22px; }
+  .title { font-size: clamp(22px, 3vw, 31px); line-height: 1.3; font-weight: 400; margin: 18px 0 16px; }
+  .title b { color: #FF6258; font-weight: 600; } /* the logo's red, lighter: it has to read on the blue */
+  .authors { font-size: 20px; font-weight: 600; margin: 0; }
+  .authors sup, .places sup { font-size: 0.62em; font-weight: 400; }
+  .places { color: var(--sky); font-size: 17px; margin: 4px 0 0; }
+  .places span { display: inline-block; margin-right: 26px; }
+  .links { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 30px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 12px; text-decoration: none; border-radius: 999px;
+    font-weight: 600; font-size: 18px; line-height: 1; padding: 15px 24px; border: 2px solid transparent; white-space: nowrap;
+  }
+  .btn-demo { background: var(--red); color: var(--white); font-size: 21px; padding: 19px 30px; box-shadow: 0 6px 22px rgba(230, 51, 42, 0.45); }
+  .btn-demo:hover { background: var(--red-dark); }
+  .btn-line { color: var(--white); border-color: rgba(255, 255, 255, 0.7); }
+  .btn-line:hover { background: rgba(255, 255, 255, 0.12); }
+  .soon { color: var(--sky); border: 2px dashed rgba(174, 182, 224, 0.6); cursor: default; }
+  .soon small { font-size: 0.78em; font-weight: 400; }
+  /* the "live" sign of the poster: a dot with a ring that grows */
+  .live { position: relative; width: 14px; height: 14px; flex: none; }
+  .live::before, .live::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: currentColor; }
+  .live::after { animation: ring 1.8s ease-out infinite; }
+  @keyframes ring { from { transform: scale(1); opacity: 0.7; } to { transform: scale(2.8); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .live::after { animation: none; opacity: 0; } html { scroll-behavior: auto; } }
+
+  /* cards */
+  .card { background: var(--white); border-radius: var(--radius); padding: 30px 34px 34px; }
+  .lead { font-size: clamp(19px, 2.2vw, 23px); line-height: 1.5; }
+  .card.lead p { margin: 0; max-width: 62ch; }
+  .lead strong { color: var(--red); font-weight: 600; }
+  .head { display: flex; align-items: center; gap: 18px; margin: 0 0 14px; }
+  .tile {
+    flex: none; background: var(--red); color: var(--white); border-radius: 13px; min-width: 62px; padding: 9px 0;
+    text-align: center; font: 800 28px/1 Montserrat, sans-serif;
+  }
+  h2 { font: 700 clamp(21px, 2.6vw, 28px)/1.2 Montserrat, sans-serif; margin: 0; }
+  .card p { margin: 0 0 18px; max-width: 68ch; }
+  .card p strong { font-weight: 600; }
+  figure { margin: 0; }
+  figure a { display: block; }
+  .fig-mid { max-width: 900px; margin: 0 auto; }
+  /* a wide figure keeps a width that can be read and scrolls sideways on a small screen */
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .scroll img { min-width: var(--least, 860px); }
+  .card .hint { display: none; color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, var(--fig, 560px)); gap: 34px; align-items: start; }
+  .split p:last-child { margin-bottom: 0; }
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 400px)); gap: 34px; justify-content: center; }
+
+  /* live demo */
+  .demo { background: var(--navy); color: var(--white); border-radius: var(--radius); padding: 34px 38px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
+  .demo .head { margin: 0 0 6px; color: var(--white); }
+  .demo h2 { font-size: clamp(34px, 6vw, 60px); font-weight: 800; letter-spacing: 0.01em; white-space: nowrap; }
+  .demo .live { color: var(--red); width: 22px; height: 22px; margin: 0 6px; }
+  .demo-text { flex: 1 1 420px; display: flex; flex-direction: column; align-items: flex-start; }
+  .demo-text p { margin: 8px 0 22px; font-size: 20px; color: var(--white); max-width: 46ch; }
+  .demo-text .url { margin-top: 14px; color: var(--sky); font-size: 16px; word-break: break-all; }
+  .qr { flex: none; text-align: center; color: var(--sky); font-size: 15px; }
+  .qr img { width: 168px; height: 168px; background: var(--white); border-radius: 14px; padding: 10px; margin: 0 auto 8px; image-rendering: pixelated; }
+
+  footer { color: var(--muted); font-size: 15px; text-align: center; padding: 10px 16px 28px; }
+  footer p { margin: 4px 0; }
+
+  @media (max-width: 820px) {
+    body { font-size: 17px; }
+    .page { padding: 10px; gap: 10px; }
+    .hero { padding: 28px 22px 26px; }
+    .card { padding: 22px 18px 24px; }
+    .demo { padding: 26px 22px; }
+    .split { grid-template-columns: 1fr; gap: 18px; }
+    .split figure { max-width: var(--fig, 560px); margin: 0 auto; }
+    .pair { grid-template-columns: minmax(0, 400px); gap: 22px; }
+    .card .hint { display: block; }
+    .btn-demo { width: 100%; justify-content: center; }
+    .tile { min-width: 52px; font-size: 23px; }
+    .head { gap: 13px; }
+    .card .head { align-items: flex-start; }
+    .qr { display: none; } /* the reader is already on a phone */
+    .demo h2 { white-space: normal; }
+    .logos img { height: 34px; width: 36px; }
+    .logos img:first-child { width: 84px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="hero-top">
+      <h1 class="name">AMIGO</h1>
+      <div class="logos">
+        <img src="assets/logo_sorbonne.png" alt="Sorbonne University" width="3840" height="1554">
+        <img src="assets/logo_lip6.png" alt="LIP6" width="1600" height="1502">
+      </div>
+    </div>
+    <p class="title">Inter<b>a</b>ctive, A<b>m</b>b<b>ig</b>uity-Aware <b>O</b>pen-Domain Table Retrieval</p>
+    <p class="authors">Allaa Boutaleb<sup>1</sup>, Bernd Amann<sup>1</sup>, Hubert Naacke<sup>1</sup>, Rafael Angarita<sup>2</sup></p>
+    <p class="places"><span><sup>1</sup>Sorbonne University, LIP6</span><span><sup>2</sup>Nanterre University, LIP6</span></p>
+    <nav class="links" aria-label="Links">
+      <a class="btn btn-demo" href="https://rubyando59-amigo.hf.space" target="_blank" rel="noopener"><span class="live" aria-hidden="true"></span>Try the live demo</a>
+      <a class="btn btn-line" href="poster.pdf" target="_blank" rel="noopener">View the poster</a>
+      <span class="btn soon">Pre-print <small>coming soon</small></span>
+    </nav>
+  </header>
+
+  <section class="card lead">
+    <p>A question asked over a data lake is often ambiguous. Existing table retrievers return one set of tables, and so choose one interpretation in the user's place. <strong>AMIGO returns one table set per valid interpretation</strong>, and asks the user where the question is ambiguous.</p>
+  </section>
+
+  <section class="card" id="interpretations">
+    <div class="head"><span class="tile">01</span><h2>One question, several valid interpretations</h2></div>
+    <p>In this small lake, one question has six valid interpretations, and each gives a different count. They differ at three levels: the parts of the question, the columns that store each part, and the way the tables join.</p>
+    <figure class="fig-mid scroll" style="--least: 640px">
+      <a href="assets/interpretations.png"><img src="assets/interpretations.png" width="2101" height="1275" alt="The question “How many Riverside bike trips were made in 2025?” over a lake of four tables. Riverside may be a district or a station; a district may be stored in three columns, a station in one; trips may start or end there. This gives six table sets with six different counts."></a>
+    </figure>
+    <p class="hint">Swipe the figure sideways, or tap it to open it in full size.</p>
+  </section>
+
+  <section class="card" id="where">
+    <div class="head"><span class="tile">02</span><h2>Where should ambiguity be handled?</h2></div>
+    <div class="split" style="--fig: 520px">
+      <div>
+        <p>A SQL query can only use the tables that were retrieved. An interpretation dropped at retrieval is <strong>lost for every later step</strong>.</p>
+        <p>So ambiguity has to be handled at retrieval, before any query is written.</p>
+      </div>
+      <figure>
+        <a href="assets/where.png"><img src="assets/where.png" width="1675" height="1438" loading="lazy" alt="Six valid interpretations in the data lake. When ambiguity is handled at retrieval, as in AMIGO, six are left after retrieval and after SQL. When it is handled at SQL writing, four are left. When it is handled nowhere, one is left."></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="card" id="method">
+    <div class="head"><span class="tile">03</span><h2>AMIGO finds the interpretations, builds the search tree bottom up, then walks it down with the user</h2></div>
+    <p>AMIGO splits the question into parts, finds the columns that may store each part, and ranks the ways to join them by cost. The candidates are the leaves of a search tree, and each fork is a question that AMIGO can ask the user.</p>
+    <figure class="scroll" style="--least: 1000px">
+      <a href="assets/pipeline.png"><img src="assets/pipeline.png" width="2600" height="718" loading="lazy" alt="AMIGO's seven steps on the bike trips question: split the question into parts, find the places of each part, judge the places, search the links between tables, judge the joins, list the candidates with their costs, and build the search tree. The tree is built bottom up and asked top down."></a>
+    </figure>
+    <p class="hint">Swipe the figure sideways, or tap it to open it in full size.</p>
+  </section>
+
+  <section class="card" id="results">
+    <div class="head"><span class="tile">04</span><h2>How does AMIGO compare to other approaches?</h2></div>
+    <p>Existing benchmarks label each question with one table set. We add the other valid table sets, and find several for about half to two thirds of the questions.</p>
+    <p>On three benchmarks, AMIGO finds more of the valid table sets than existing approaches, with far fewer unneeded tables, and the SQL queries written from its output return more of the expected answers.</p>
+    <figure class="scroll" style="--least: 1040px">
+      <a href="assets/results.png"><img src="assets/results.png" width="2501" height="1474" loading="lazy" alt="Complete recall against precision on BIRD, Spider and MMQA, against the single-valid label and against the multi-valid label, for AMIGO and the compared methods. Also shown: how the multi-valid label is built, BIRD questions in a lake of 2,097 tables, and the share of SQL answers found."></a>
+    </figure>
+    <p class="hint">Swipe the figure sideways, or tap it to open it in full size.</p>
+  </section>
+
+  <section class="card" id="forks">
+    <div class="head"><span class="tile">05</span><h2>Can we estimate ambiguity / complexity with AMIGO's output?</h2></div>
+    <p>Harder questions get wider trees. The number of forks grows overall with the number of valid table sets of a question, and with the number of tables that it needs.</p>
+    <div class="pair">
+      <figure>
+        <a href="assets/forks_ambiguity.png"><img src="assets/forks_ambiguity.png" width="980" height="900" loading="lazy" alt="Ambiguity: forks per question of AMIGO's tree on BIRD, Spider and MMQA, against the number of valid table sets of the question."></a>
+      </figure>
+      <figure>
+        <a href="assets/forks_complexity.png"><img src="assets/forks_complexity.png" width="980" height="900" loading="lazy" alt="Complexity: forks per question of AMIGO's tree on BIRD, Spider and MMQA, against the number of tables that the question needs."></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="demo" id="demo">
+    <div class="demo-text">
+      <div class="head"><span class="tile">06</span><span class="live" aria-hidden="true"></span><h2>LIVE DEMO</h2></div>
+      <p>Ask your own question over the BIRD and Spider lakes, and answer AMIGO's questions.</p>
+      <a class="btn btn-demo" href="https://rubyando59-amigo.hf.space" target="_blank" rel="noopener">Open the live demo</a>
+      <span class="url">rubyando59-amigo.hf.space</span>
+    </div>
+    <div class="qr">
+      <img src="assets/qr.png" width="2000" height="2000" loading="lazy" alt="QR code of the live demo">
+      Try it on your phone!
+    </div>
+  </section>
+
+</div>
+<footer>
+  <p>Pre-print coming soon. <a href="poster.pdf">View the poster</a>.</p>
+  <p>Sorbonne University, LIP6 · Nanterre University</p>
+</footer>
+</body>
+</html>

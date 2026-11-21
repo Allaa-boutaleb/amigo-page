@@ -3,16 +3,15 @@
   Project page of AMIGO. A static page: this file, assets/ and poster.pdf. All paths are relative,
   so it works under any address (GitHub Pages serves a project page under /<repository>/).
 
-  The figures are images of the poster (paper_v2/poster.tex), rendered on 2026-11-21. Export them again
-  when the poster changes. Crop boxes are in points from the top left of the A1 page (1684 x 2384 pt);
-  the white around each figure is trimmed, then 20 px are added back.
-    assets/interpretations.png  poster.pdf, box (42, 248, 952, 800)      card 01
-    assets/where.png            poster.pdf, box (1003, 250, 1650, 795)   card 02
-    assets/pipeline.png         figures/poster_method.pdf, whole page    card 03
-    assets/results.png          poster.pdf, box (40, 1462, 1228, 2162)   card 04
-    assets/forks_*.png          figures/poster_forks.pdf, the two plots  card 05
-    assets/qr.png               figures/poster_qr.png (the live demo's address)
-    poster.pdf                  paper_v2/poster.pdf
+  Every figure is inline SVG drawn with the colour tokens below, on a transparent background, so the
+  page works in light mode (the default), in dark mode (the switch at the top), and when a browser forces dark mode. assets/page.js animates
+  the figures (JavaScript draws them). Each figure shows its final state at rest and with reduced motion,
+  and replays its animation when it scrolls into view.
+  The numbers of the result charts are in assets/data.js, written from the paper by tools/page_data.py:
+    .venv/bin/python project_page/tools/page_data.py      (from the amigo repository root)
+  The Riverside example and its costs are those of the paper (Sections 2 and 3, Table 2, Figures 3 and 4);
+  the counts of its six answers are illustrative, as in the paper. Figure 5 of the paper is section 05.
+  Icons: Hugging Face and GitHub marks from Simple Icons (CC0); the poster and paper icons are drawn here.
 -->
 <html lang="en">
 <head>
@@ -27,122 +26,446 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23E6332A'/%3E%3Cpath d='M16 7 7.5 25h4l1.6-3.6h5.8L20.5 25h4L16 7Zm-1.4 11.2L16 14.9l1.4 3.3h-2.8Z' fill='white'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+<script>
+  // the theme the reader picked last time, before the page paints
+  try { const t = localStorage.getItem("amigo-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  document.documentElement.classList.add("js");
+</script>
 <style>
-  /* the poster's palette: the blue and the red of the Sorbonne University logo */
+  /* Colour tokens. Light: the blue and the red of the Sorbonne University logo, as on the poster.
+     Each colour has one meaning: --red is the ambiguity and AMIGO's answer to it, --lake the data lake. */
   :root {
-    --navy: #263068; --steel: #4858A8; --sky: #AEB6E0; --mist: #ECEEF9; --page: #EBEDF7;
-    --red: #E6332A; --red-dark: #C4261E; --muted: #5E6570; --white: #FFFFFF;
+    --page: #EEF0F8; --card: #FFFFFF; --ink: #263068; --ink-2: #3D4680; --muted: #5E6570; --faint: #8A90A0;
+    --line: #D7DBEF; --soft: #ECEEF9; --soft-2: #F5F6FC;
+    --lake: #4858A8; --lake-soft: #AEB6E0; --lake-tint: #DDE1F4;
+    --red: #E6332A; --red-ink: #C4261E; --red-soft: #FBE1DF; --red-light: #F3A39E;
+    --green: #008300; --grey: #A3A8AF; --series-navy: #263068; --amber: #C77F00;
+    --purple: #A23BA8; --orange: #D98E00; --teal: #0E9AA7;
+    --hero: #263068; --hero-2: #1C2454; --hero-ink: #FFFFFF; --hero-muted: #AEB6E0; --hero-red: #FF6258;
+    --shadow: 0 1px 2px rgba(38, 48, 104, .06), 0 8px 30px rgba(38, 48, 104, .07);
     --radius: 22px;
+    color-scheme: light;
   }
+  /* Light by default, whatever the system theme. Dark only when the reader picks it with the switch. */
+  :root[data-theme="dark"] {
+    --page: #0D1024; --card: #161A35; --ink: #E7EAF8; --ink-2: #C9CEEA; --muted: #A2A8C3; --faint: #7A809C;
+    --line: #2C3263; --soft: #1E2347; --soft-2: #1A1E3E;
+    --lake: #93A0EE; --lake-soft: #4C5799; --lake-tint: #262C5A;
+    --red: #FF5A4F; --red-ink: #FF7D74; --red-soft: #3D1A26; --red-light: #F29A93;
+    --green: #43C257; --grey: #868C9E; --series-navy: #AAB4F6; --amber: #F0B030;
+    --purple: #D07AD6; --orange: #F0B030; --teal: #2CC4D0;
+    --hero: #171C42; --hero-2: #10142F; --hero-ink: #FFFFFF; --hero-muted: #AEB6E0; --hero-red: #FF6F66;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 30px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
-    margin: 0; background: var(--page); color: var(--navy);
+    margin: 0; background: var(--page); color: var(--ink);
     font: 400 18px/1.6 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased; transition: background .3s, color .3s;
   }
   img { max-width: 100%; height: auto; display: block; }
-  a { color: var(--steel); }
-  a:focus-visible { outline: 3px solid var(--red); outline-offset: 3px; border-radius: 6px; }
-  .page { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  a { color: var(--lake); }
+  :focus-visible { outline: 3px solid var(--red); outline-offset: 3px; border-radius: 6px; }
+  code, .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: .86em; }
+  .page { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-  /* header */
-  .hero { background: var(--navy); color: var(--white); border-radius: var(--radius); padding: 40px 44px 36px; }
+  /* ---------- sticky bar ---------- */
+  .bar {
+    position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 6px; justify-content: space-between;
+    padding: 8px 16px; background: color-mix(in srgb, var(--page) 82%, transparent); backdrop-filter: blur(10px);
+    border-bottom: 1px solid transparent; transition: border-color .2s, transform .3s;
+  }
+  .bar.scrolled { border-bottom-color: var(--line); }
+  .bar .brand { font: 800 19px/1 Montserrat, sans-serif; color: var(--ink); text-decoration: none; letter-spacing: .02em; opacity: 0; transition: opacity .25s; }
+  .bar.scrolled .brand { opacity: 1; }
+  .bar nav { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+  .bar nav a { color: var(--muted); text-decoration: none; font-size: 14.5px; font-weight: 500; padding: 6px 11px; border-radius: 999px; white-space: nowrap; }
+  .bar nav a:hover, .bar nav a.here { color: var(--ink); background: var(--soft); }
+  .theme {
+    flex: none; width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .theme svg { width: 18px; height: 18px; }
+  .theme .moon { display: none; }
+  :root[data-theme="dark"] .theme .sun { display: none; }
+  :root[data-theme="dark"] .theme .moon { display: block; }
+
+  /* ---------- header ---------- */
+  .hero {
+    position: relative; overflow: hidden; color: var(--hero-ink); border-radius: var(--radius); padding: 44px 46px 40px;
+    background: radial-gradient(120% 140% at 85% 10%, color-mix(in srgb, var(--red) 22%, var(--hero)) 0%, var(--hero) 45%, var(--hero-2) 100%);
+  }
+  .hero > *:not(.hero-art) { position: relative; z-index: 1; }
   .hero-top { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
-  .name { font: 800 clamp(64px, 11vw, 124px)/0.95 Montserrat, sans-serif; letter-spacing: -0.01em; margin: 0; }
-  .logos { flex: none; background: var(--white); border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; }
+  .name { font: 800 clamp(64px, 11vw, 128px)/0.95 Montserrat, sans-serif; letter-spacing: -0.01em; margin: 0; }
+  .name span { display: inline-block; animation: rise .8s cubic-bezier(.2, .8, .2, 1) both; }
+  .name span:nth-child(2) { animation-delay: .06s; } .name span:nth-child(3) { animation-delay: .12s; }
+  .name span:nth-child(4) { animation-delay: .18s; } .name span:nth-child(5) { animation-delay: .24s; }
+  @keyframes rise { from { transform: translateY(30%); opacity: 0; } to { transform: none; opacity: 1; } }
+  .logos { flex: none; background: #FFFFFF; border-radius: 14px; padding: 12px 18px; display: flex; align-items: center; }
   .logos img { flex: none; height: 44px; width: 47px; }
   .logos img:first-child { width: 109px; margin-right: 22px; }
-  .title { font-size: clamp(22px, 3vw, 31px); line-height: 1.3; font-weight: 400; margin: 18px 0 16px; }
-  .title b { color: #FF6258; font-weight: 600; } /* the logo's red, lighter: it has to read on the blue */
+  .title { font-size: clamp(22px, 3vw, 31px); line-height: 1.3; font-weight: 400; margin: 18px 0 16px; max-width: 30ch; }
+  .title b { color: var(--hero-red); font-weight: 600; }
   .authors { font-size: 20px; font-weight: 600; margin: 0; }
   .authors sup, .places sup { font-size: 0.62em; font-weight: 400; }
-  .places { color: var(--sky); font-size: 17px; margin: 4px 0 0; }
+  .places { color: var(--hero-muted); font-size: 17px; margin: 4px 0 0; }
   .places span { display: inline-block; margin-right: 26px; }
-  .links { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 30px; }
+  .links { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 30px; }
   .btn {
-    display: inline-flex; align-items: center; gap: 12px; text-decoration: none; border-radius: 999px;
-    font-weight: 600; font-size: 18px; line-height: 1; padding: 15px 24px; border: 2px solid transparent; white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 11px; text-decoration: none; border-radius: 999px;
+    font-weight: 600; font-size: 17px; line-height: 1; padding: 14px 22px; border: 2px solid transparent; white-space: nowrap;
+    transition: transform .15s, background .15s, box-shadow .15s;
   }
-  .btn-demo { background: var(--red); color: var(--white); font-size: 21px; padding: 19px 30px; box-shadow: 0 6px 22px rgba(230, 51, 42, 0.45); }
-  .btn-demo:hover { background: var(--red-dark); }
-  .btn-line { color: var(--white); border-color: rgba(255, 255, 255, 0.7); }
-  .btn-line:hover { background: rgba(255, 255, 255, 0.12); }
-  .soon { color: var(--sky); border: 2px dashed rgba(174, 182, 224, 0.6); cursor: default; }
-  .soon small { font-size: 0.78em; font-weight: 400; }
-  /* the "live" sign of the poster: a dot with a ring that grows */
-  .live { position: relative; width: 14px; height: 14px; flex: none; }
+  .btn svg { width: 22px; height: 22px; flex: none; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-demo { background: var(--red); color: #FFFFFF; font-size: 19px; padding: 16px 26px; box-shadow: 0 6px 22px color-mix(in srgb, var(--red) 45%, transparent); }
+  .btn-demo:hover { background: var(--red-ink); }
+  .btn-demo svg { width: 26px; height: 26px; }
+  .btn-line { color: #FFFFFF; border-color: rgba(255, 255, 255, .7); }
+  .btn-line:hover { background: rgba(255, 255, 255, .12); }
+  .soon { color: var(--hero-muted); border: 2px dashed rgba(174, 182, 224, .55); cursor: default; }
+  .soon:hover { transform: none; }
+  .soon small { font-size: .78em; font-weight: 400; opacity: .9; }
+  .live { position: relative; width: 12px; height: 12px; flex: none; }
   .live::before, .live::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: currentColor; }
   .live::after { animation: ring 1.8s ease-out infinite; }
-  @keyframes ring { from { transform: scale(1); opacity: 0.7; } to { transform: scale(2.8); opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) { .live::after { animation: none; opacity: 0; } html { scroll-behavior: auto; } }
+  @keyframes ring { from { transform: scale(1); opacity: .7; } to { transform: scale(2.8); opacity: 0; } }
+  .hero-art { position: absolute; right: 40px; top: 150px; width: 320px; height: 215px; opacity: .6; pointer-events: none; z-index: 0; }
+  .hero-art .e { stroke: rgba(174, 182, 224, .45); stroke-width: 1.6; fill: none; }
+  .hero-art .p { stroke: var(--hero-red); stroke-width: 2.6; fill: none; stroke-dasharray: 26 400; stroke-linecap: round; animation: flow 4.8s linear infinite; }
+  .hero-art .n { fill: var(--hero); stroke: rgba(174, 182, 224, .7); stroke-width: 1.6; }
+  .hero-art .l { fill: var(--hero-red); }
+  @keyframes flow { from { stroke-dashoffset: 420; } to { stroke-dashoffset: 0; } }
 
-  /* cards */
-  .card { background: var(--white); border-radius: var(--radius); padding: 30px 34px 34px; }
-  .lead { font-size: clamp(19px, 2.2vw, 23px); line-height: 1.5; }
-  .card.lead p { margin: 0; max-width: 62ch; }
+  /* ---------- cards and section heads ---------- */
+  .card { background: var(--card); border-radius: var(--radius); padding: 34px 38px 36px; box-shadow: var(--shadow); transition: background .3s; }
+  .lead { font-size: clamp(19px, 2.2vw, 23px); line-height: 1.55; }
+  .lead p { margin: 0 0 22px; max-width: 64ch; }
   .lead strong { color: var(--red); font-weight: 600; }
-  .head { display: flex; align-items: center; gap: 18px; margin: 0 0 14px; }
+  .head { display: flex; align-items: center; gap: 18px; margin: 0 0 12px; }
   .tile {
-    flex: none; background: var(--red); color: var(--white); border-radius: 13px; min-width: 62px; padding: 9px 0;
-    text-align: center; font: 800 28px/1 Montserrat, sans-serif;
+    flex: none; background: var(--red); color: #FFFFFF; border-radius: 13px; min-width: 60px; padding: 9px 0;
+    text-align: center; font: 800 27px/1 Montserrat, sans-serif;
   }
-  h2 { font: 700 clamp(21px, 2.6vw, 28px)/1.2 Montserrat, sans-serif; margin: 0; }
-  .card p { margin: 0 0 18px; max-width: 68ch; }
+  h2 { font: 700 clamp(22px, 2.7vw, 30px)/1.2 Montserrat, sans-serif; margin: 0; }
+  h3 { font: 700 19px/1.3 Montserrat, sans-serif; margin: 0 0 6px; }
+  .card p { margin: 0 0 16px; max-width: 70ch; }
   .card p strong { font-weight: 600; }
-  figure { margin: 0; }
-  figure a { display: block; }
-  .fig-mid { max-width: 900px; margin: 0 auto; }
-  /* a wide figure keeps a width that can be read and scrolls sideways on a small screen */
-  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .scroll img { min-width: var(--least, 860px); }
-  .card .hint { display: none; color: var(--muted); font-size: 14px; margin: 8px 0 0; }
-  .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, var(--fig, 560px)); gap: 34px; align-items: start; }
-  .split p:last-child { margin-bottom: 0; }
-  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 400px)); gap: 34px; justify-content: center; }
+  .sub { color: var(--muted); }
+  .kicker { color: var(--red-ink); font-weight: 600; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 4px; }
+  .hl { color: var(--red-ink); font-weight: 600; }
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+  .hint { display: none; color: var(--muted); font-size: 14px; margin: 6px 0 0; }
 
-  /* live demo */
-  .demo { background: var(--navy); color: var(--white); border-radius: var(--radius); padding: 34px 38px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; }
-  .demo .head { margin: 0 0 6px; color: var(--white); }
-  .demo h2 { font-size: clamp(34px, 6vw, 60px); font-weight: 800; letter-spacing: 0.01em; white-space: nowrap; }
-  .demo .live { color: var(--red); width: 22px; height: 22px; margin: 0 6px; }
+  /* stat tiles */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .stat { background: var(--soft); border-radius: 16px; padding: 18px 18px 16px; }
+  .stat b { display: block; font: 800 clamp(30px, 3.6vw, 42px)/1.05 Montserrat, sans-serif; color: var(--red); font-variant-numeric: tabular-nums; }
+  .stat > span { display: block; font-size: 15.5px; line-height: 1.4; color: var(--ink-2); margin-top: 8px; }
+
+  /* the typed question */
+  .ask { display: flex; align-items: center; gap: 14px; margin: 0 0 22px; }
+  .ask svg { width: 40px; height: 40px; flex: none; color: var(--ink); }
+  .bubble {
+    border: 2px solid var(--line); border-radius: 18px; padding: 10px 18px; font-size: clamp(17px, 2.2vw, 22px); background: var(--card);
+    position: relative; min-height: 1.6em;
+  }
+  .bubble .amb { color: var(--red); font-weight: 600; }
+  .caret { display: inline-block; width: 2px; height: 1.05em; background: var(--red); vertical-align: -.15em; margin-left: 2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ---------- figures (shared) ---------- */
+  .fig { margin: 8px 0 0; }
+  .fig svg { width: 100%; height: auto; display: block; overflow: visible; }
+  svg text { font-family: Inter, system-ui, sans-serif; fill: var(--ink); }
+  svg .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12.5px; }
+  svg .muted { fill: var(--muted); }
+  svg .lab { font-size: 13px; }
+  svg .small { font-size: 11.5px; }
+  svg .big { font: 700 15px Montserrat, sans-serif; }
+  svg .band { fill: var(--soft); }
+  svg .chip { fill: var(--card); stroke: var(--lake-soft); stroke-width: 1.4; }
+  svg .box { fill: var(--card); stroke: var(--line); stroke-width: 1.4; }
+  svg .edge { stroke: var(--faint); stroke-width: 1.5; fill: none; transition: stroke .35s, stroke-width .35s, opacity .35s; }
+  svg .yes rect { fill: var(--lake-tint); stroke: var(--lake); } svg .yes text { fill: var(--lake); font-weight: 700; }
+  svg .no rect { fill: var(--red-soft); stroke: var(--red); } svg .no text { fill: var(--red-ink); font-weight: 700; }
+  svg .arrowhead { fill: var(--faint); }
+
+  .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 14px 0 0; }
+  .ctl {
+    border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 7px 13px;
+    font: 500 14.5px Inter, sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; transition: background .15s, border-color .15s, color .15s;
+  }
+  .ctl:hover { border-color: var(--lake-soft); background: var(--soft-2); }
+  .ctl[aria-pressed="true"], .ctl.on { background: var(--ink); color: var(--card); border-color: var(--ink); }
+  .ctl svg { width: 14px; height: 14px; }
+  .steps { display: flex; gap: 6px; flex-wrap: wrap; }
+  .steps button {
+    border: 1px solid var(--line); background: var(--card); color: var(--muted); border-radius: 10px; padding: 6px 10px;
+    font: 500 13.5px Inter, sans-serif; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; position: relative; overflow: hidden;
+  }
+  .steps button b { font: 800 13px Montserrat, sans-serif; color: var(--red); }
+  .steps button.on { border-color: var(--red); color: var(--ink); background: var(--red-soft); }
+  .steps button.done { color: var(--ink-2); }
+  .steps button .prog { position: absolute; left: 0; bottom: 0; height: 2px; background: var(--red); width: 0; }
+  .say {
+    margin: 14px 0 0; background: var(--soft-2); border: 1px solid var(--line); border-left: 4px solid var(--red);
+    border-radius: 12px; padding: 14px 18px; min-height: 96px;
+  }
+  .say h3 { margin: 0 0 4px; }
+  .say p { margin: 0; font-size: 16.5px; color: var(--ink-2); max-width: 80ch; }
+  .say .f { font-family: "JetBrains Mono", monospace; font-size: 14px; background: var(--soft); border-radius: 6px; padding: 1px 6px; white-space: nowrap; }
+
+  /* step figures: one column per step. Without JS every column shows (the final state). */
+  .js .stepfig [data-s] { transition: opacity .55s ease, transform .55s ease; }
+  .js .stepfig [data-s].later { opacity: 0; transform: translateY(8px); }
+  .js .stepfig [data-s].past { opacity: .5; }
+  .js .stepfig .fx { transition: opacity .45s ease; }
+  .stepfig .hdr rect { fill: transparent; transition: fill .3s; }
+  .stepfig .hdr.cur rect { fill: var(--red-soft); }
+  .stepfig .hdr text.n { fill: var(--red); font: 800 14px Montserrat, sans-serif; }
+  .stepfig .hdr text.t { font: 700 14px Montserrat, sans-serif; }
+  .stepfig .off rect { transition: stroke .3s, fill .3s; }
+  .stepfig .off.cur rect { stroke: var(--red); fill: var(--red-soft); }
+
+  /* ---------- 01 interpretations ---------- */
+  #interp svg .node rect { fill: var(--card); stroke: var(--lake-soft); stroke-width: 1.4; transition: stroke .3s, fill .3s; }
+  #interp svg .node.part rect { fill: var(--red-soft); stroke: var(--red); }
+  #interp svg .node.part text { fill: var(--red-ink); font-weight: 600; }
+  #interp svg .node.on rect { stroke: var(--red); stroke-width: 2.4; }
+  #interp svg .edge.on { stroke: var(--red); stroke-width: 3; }
+  #interp svg .leaf ellipse { fill: var(--card); stroke: var(--lake); stroke-width: 1.6; transition: stroke .3s, stroke-width .3s, fill .3s; }
+  #interp svg .leaf { cursor: pointer; }
+  #interp svg .leaf.on ellipse { stroke: var(--red); stroke-width: 3; fill: var(--red-soft); }
+  #interp svg .ans rect { fill: var(--red); } #interp svg .ans text { fill: #FFFFFF; font: 700 15px Inter, sans-serif; }
+  #interp svg .leaf .ans { transition: transform .35s; transform-box: fill-box; transform-origin: center; }
+  #interp svg .leaf.on .ans { transform: scale(1.12); }
+  #interp svg .lake-t { transition: opacity .3s; }
+  #interp svg.picking .lake-t { opacity: .28; } #interp svg.picking .lake-t.on { opacity: 1; }
+  #interp svg.picking .leaf:not(.on) { opacity: .55; }
+  .readout { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin: 10px 0 0; min-height: 52px; }
+  .readout .n { font: 800 28px Montserrat, sans-serif; color: var(--red); font-variant-numeric: tabular-nums; }
+  .readout .what { font-size: 16.5px; }
+  .readout .tabs { font-family: "JetBrains Mono", monospace; font-size: 14px; color: var(--lake); }
+  .levels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0 0; }
+  .levels div { background: var(--soft); border-radius: 14px; padding: 14px 16px; font-size: 16px; line-height: 1.45; }
+  .levels b { font: 700 18px Montserrat, sans-serif; display: flex; align-items: center; gap: 9px; margin-bottom: 4px; }
+  .levels i { font-style: normal; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--ink); font: 700 14px Montserrat, sans-serif; }
+
+  /* ---------- 02 where ---------- */
+  #where svg .lane { fill: var(--card); stroke: var(--line); stroke-width: 1.6; }
+  #where svg .lane.amigo { stroke: var(--red); stroke-width: 2; }
+  #where svg .dot { fill: var(--red); stroke: var(--card); stroke-width: 1.5; }
+  #where svg .gone circle { fill: none; stroke: var(--faint); stroke-width: 1.4; }
+  #where svg .gone path { stroke: var(--faint); stroke-width: 1.4; }
+  #where svg .kept { font: 800 30px Montserrat, sans-serif; }
+  #where .d2, #where .d3, #where .k { transition: opacity .5s; }
+  #where .arm .d2, #where .arm .d3, #where .arm .k { opacity: 0; transition: none; }
+  #where .arm.in .d2 { opacity: 1; transition: opacity .5s calc(.6s + var(--i, 0) * .06s); }
+  #where .arm.in .d3 { opacity: 1; transition: opacity .5s calc(1.5s + var(--i, 0) * .06s); }
+  #where .arm.in .k { opacity: 1; transition: opacity .5s 2.3s; }
+  #where svg .flow { stroke-width: 2; fill: none; stroke-dasharray: 4 5; animation: dash 1.2s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset: -18; } }
+  .split { display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); gap: 34px; align-items: center; }
+
+  /* ---------- 03 pipeline ---------- */
+  #method .fig { min-width: 0; }
+  #pipe .row-off { opacity: .32; }
+  #pipe .cand rect { fill: var(--card); stroke: var(--lake-soft); stroke-width: 1.3; }
+  #pipe .cand text.x { fill: var(--lake); font-weight: 700; }
+  #pipe .gedge { stroke: var(--faint); stroke-width: 2; fill: none; }
+  #pipe .gedge.hot { stroke: var(--red); stroke-width: 3.2; }
+  #pipe .tnode rect { fill: var(--card); stroke: var(--lake); stroke-width: 1.5; }
+  #pipe .tnode text { fill: var(--lake); font-weight: 700; font-size: 13px; }
+  #pipe .fork circle { fill: var(--card); stroke: var(--red); stroke-width: 1.8; }
+  #pipe .fork text { fill: var(--red-ink); font-weight: 700; font-size: 12px; }
+  #pipe .branch { stroke: var(--red); stroke-width: 1.6; fill: none; }
+  #pipe .pulse { fill: var(--red); }
+
+  /* ---------- 04 tree walk ---------- */
+  .walk { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+  #tree svg .row text.o { font-size: 13.5px; }
+  #tree svg .row .share { fill: var(--muted); font-size: 12px; }
+  #tree svg .fk rect { fill: var(--soft); stroke: var(--line); stroke-width: 1.2; transition: stroke .25s, fill .25s; }
+  #tree svg .fk text { font-style: italic; font-size: 13px; }
+  #tree svg .fk.cur rect { stroke: var(--red); stroke-width: 2.2; fill: var(--red-soft); }
+  #tree svg .lf rect { fill: var(--ink); transition: fill .3s, opacity .3s; }
+  #tree svg .lf text { fill: var(--card); font-size: 13px; }
+  #tree svg .lf.kept rect { fill: var(--red); } #tree svg .lf.kept text { fill: #FFFFFF; }
+  #tree svg .lf.out { opacity: .25; }
+  #tree svg .ln { stroke: var(--faint); stroke-width: 1.4; fill: none; transition: stroke .3s, stroke-width .3s, opacity .3s; }
+  #tree svg .ln.on { stroke: var(--red); stroke-width: 2.6; }
+  #tree svg .row.out, #tree svg .ln.out { opacity: .25; }
+  #tree svg .dots { stroke: var(--faint); stroke-dasharray: 1 3; }
+  .askcard { background: var(--soft-2); border: 1px solid var(--line); border-radius: 18px; padding: 20px 20px 18px; }
+  .askcard .who { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+  .askcard .who i { width: 26px; height: 26px; border-radius: 8px; background: var(--red); display: grid; place-items: center; color: #FFFFFF; font: 800 13px Montserrat, sans-serif; font-style: normal; }
+  .askcard .q { font: 700 21px/1.3 Montserrat, sans-serif; margin: 0 0 14px; min-height: 2.6em; }
+  .opts { display: grid; gap: 8px; }
+  .opt {
+    position: relative; overflow: hidden; text-align: left; border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+    border-radius: 12px; padding: 11px 14px; font: 500 16px Inter, sans-serif; cursor: pointer; display: flex; justify-content: space-between; gap: 10px;
+    transition: border-color .15s, transform .15s;
+  }
+  .opt:hover { border-color: var(--red); transform: translateX(2px); }
+  .opt .bar2 { position: absolute; left: 0; top: 0; bottom: 0; background: var(--red-soft); z-index: 0; transition: width .5s; }
+  .opt > span { position: relative; z-index: 1; }
+  .opt .sh { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .opt.none { border-style: dashed; color: var(--muted); }
+  .askcard .done { font-size: 16.5px; }
+  .askcard .done b { color: var(--red); }
+  .crumbs { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; min-height: 28px; }
+  .crumbs span { font-size: 13px; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--ink-2); }
+  .crumbs span.x { border-style: dashed; color: var(--muted); }
+  .count { display: flex; gap: 10px; align-items: baseline; margin: 16px 0 0; font-size: 15px; color: var(--muted); }
+  .count b { font: 800 30px Montserrat, sans-serif; color: var(--red); font-variant-numeric: tabular-nums; }
+
+  /* ---------- charts ---------- */
+  .chart-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+  .chart h4 { font: 700 16px Montserrat, sans-serif; margin: 0 0 2px; }
+  .chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+  .axis line, .axis path { stroke: var(--line); fill: none; }
+  .axis text { fill: var(--muted); font-size: 12px; }
+  .grid line { stroke: var(--line); stroke-dasharray: 2 4; }
+  .axis-title { fill: var(--muted); font-size: 12.5px; }
+  .pt { transition: transform .8s cubic-bezier(.3, .8, .2, 1), opacity .4s; cursor: pointer; }
+  .pt .hit { fill: transparent; }
+  .pt.dim { opacity: .14; }
+  .pt.edge-pt { opacity: .35; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 4px 0 14px; font-size: 14.5px; }
+  .legend .g { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; }
+  .legend .g > em { font-style: normal; font-weight: 700; font-family: Montserrat, sans-serif; font-size: 13.5px; margin-right: 2px; }
+  .legend button { border: 0; background: none; color: var(--ink); font: 400 14.5px Inter, sans-serif; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; padding: 2px 4px; border-radius: 6px; }
+  .legend button:hover { background: var(--soft); }
+  .legend button svg { width: 16px; height: 16px; overflow: visible; }
+  .legend button.dim { opacity: .35; }
+  .seg { display: inline-flex; background: var(--soft); border-radius: 999px; padding: 3px; gap: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); border-radius: 999px; padding: 7px 14px; font: 600 14px Inter, sans-serif; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); }
+  .tip {
+    position: fixed; z-index: 50; pointer-events: none; background: var(--card); color: var(--ink); border: 1px solid var(--line);
+    border-radius: 10px; padding: 8px 11px; font-size: 13.5px; line-height: 1.45; box-shadow: var(--shadow); opacity: 0; transition: opacity .12s; max-width: 260px;
+  }
+  .tip b { font-weight: 600; }
+  .tip .k { color: var(--muted); }
+  .note { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 26px; }
+  .panel { background: var(--soft-2); border: 1px solid var(--line); border-radius: 18px; padding: 20px 22px; }
+  .panel p { font-size: 16px; }
+  .bars .lbl { fill: var(--ink); font-size: 13px; }
+  .bars .val { fill: var(--ink); font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .grow { transition: width 1s cubic-bezier(.3, .8, .2, 1), x 1s; }
+  .drawline { transition: stroke-dashoffset 1.4s ease; }
+
+  /* ---------- 05 labeler ---------- */
+  #label svg .sheet { stroke-width: 1.2; }
+  #label svg .q-red { fill: var(--red-soft); } #label svg .q-blue { fill: var(--lake-tint); } #label svg .q-amber { fill: color-mix(in srgb, var(--amber) 20%, transparent); }
+  #label svg .t-red { fill: var(--red-ink); font-weight: 600; } #label svg .t-blue { fill: var(--lake); font-weight: 600; } #label svg .t-amber { fill: var(--amber); font-weight: 600; }
+  #label svg .decoy rect { stroke: var(--amber); stroke-dasharray: 4 3; fill: color-mix(in srgb, var(--amber) 10%, transparent); }
+  #label svg .vote { transition: opacity .3s, transform .3s; }
+  .js #label .stepfig.anim [data-s="3"]:not(.later) .vote { animation: pop .35s both; animation-delay: calc(var(--v) * .28s); }
+  @keyframes pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: none; } }
+  #label svg .vote { transform-box: fill-box; transform-origin: center; }
+  .bigstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 18px 0 0; }
+  .meter { background: var(--soft); border-radius: 16px; padding: 16px 18px; }
+  .meter .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .meter b { font: 800 34px Montserrat, sans-serif; color: var(--red); font-variant-numeric: tabular-nums; }
+  .meter .bn { font: 700 16px Montserrat, sans-serif; }
+  .meter .track { height: 10px; background: var(--card); border-radius: 99px; margin: 10px 0 8px; overflow: hidden; }
+  .meter .fill { height: 100%; width: var(--w); background: var(--red); border-radius: 99px; transition: width 1.2s cubic-bezier(.3, .8, .2, 1); }
+  .meter small { display: block; color: var(--muted); font-size: 14px; line-height: 1.4; }
+
+  /* ---------- live demo ---------- */
+  .demo { background: var(--hero); color: #FFFFFF; border-radius: var(--radius); padding: 36px 40px; display: flex; align-items: center; gap: 32px; flex-wrap: wrap; position: relative; overflow: hidden; }
+  .demo .head { margin: 0 0 6px; color: #FFFFFF; }
+  .demo h2 { font-size: clamp(34px, 6vw, 58px); font-weight: 800; letter-spacing: .01em; white-space: nowrap; }
+  .demo .live { color: var(--hero-red); width: 20px; height: 20px; margin: 0 4px; }
   .demo-text { flex: 1 1 420px; display: flex; flex-direction: column; align-items: flex-start; }
-  .demo-text p { margin: 8px 0 22px; font-size: 20px; color: var(--white); max-width: 46ch; }
-  .demo-text .url { margin-top: 14px; color: var(--sky); font-size: 16px; word-break: break-all; }
-  .qr { flex: none; text-align: center; color: var(--sky); font-size: 15px; }
-  .qr img { width: 168px; height: 168px; background: var(--white); border-radius: 14px; padding: 10px; margin: 0 auto 8px; image-rendering: pixelated; }
+  .demo-text p { margin: 8px 0 22px; font-size: 19px; color: #FFFFFF; max-width: 50ch; }
+  .demo-text .url { margin-top: 14px; color: var(--hero-muted); font-size: 15px; word-break: break-all; }
+  .qr { flex: none; text-align: center; color: var(--hero-muted); font-size: 15px; }
+  .qr img { width: 168px; height: 168px; background: #FFFFFF; border-radius: 14px; padding: 10px; margin: 0 auto 8px; image-rendering: pixelated; }
 
-  footer { color: var(--muted); font-size: 15px; text-align: center; padding: 10px 16px 28px; }
+  footer { color: var(--muted); font-size: 15px; text-align: center; padding: 10px 16px 30px; }
   footer p { margin: 4px 0; }
 
+
+  @media (max-width: 980px) {
+    .hero-art { display: none; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .walk, .two, .split { grid-template-columns: minmax(0, 1fr); }
+    .chart-grid { grid-template-columns: minmax(0, 1fr); }
+  }
   @media (max-width: 820px) {
     body { font-size: 17px; }
-    .page { padding: 10px; gap: 10px; }
+    .page { padding: 10px; gap: 12px; }
+    .bar { padding: 6px 10px; }
+    .bar nav a { font-size: 13.5px; padding: 6px 8px; }
     .hero { padding: 28px 22px 26px; }
-    .card { padding: 22px 18px 24px; }
+    .card { padding: 24px 18px 26px; }
     .demo { padding: 26px 22px; }
-    .split { grid-template-columns: 1fr; gap: 18px; }
-    .split figure { max-width: var(--fig, 560px); margin: 0 auto; }
-    .pair { grid-template-columns: minmax(0, 400px); gap: 22px; }
-    .card .hint { display: block; }
+    .levels, .bigstats { grid-template-columns: minmax(0, 1fr); }
     .btn-demo { width: 100%; justify-content: center; }
-    .tile { min-width: 52px; font-size: 23px; }
-    .head { gap: 13px; }
-    .card .head { align-items: flex-start; }
-    .qr { display: none; } /* the reader is already on a phone */
+    .tile { min-width: 50px; font-size: 22px; }
+    .head { gap: 13px; align-items: flex-start; }
+    .qr { display: none; }
     .demo h2 { white-space: normal; }
     .logos img { height: 34px; width: 36px; }
     .logos img:first-child { width: 84px; }
+    .hint { display: block; }
+    .wide-fig svg { min-width: var(--least, 760px); }
+  }
+  @media (max-width: 480px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
 <body>
-<div class="page">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-hf" viewBox="0 0 24 24"><path fill="currentColor" d="M1.4446 11.5059c0 1.1021.1673 2.1585.4847 3.1563-.0378-.0028-.0691-.0058-.1058-.0058-.4209 0-.8015.16-1.0704.4512-.3454.3737-.4984.8335-.4316 1.293a1.576 1.576 0 0 0 .2148.5978c-.2319.1864-.4018.4456-.4844.7578-.0646.2448-.131.7543.2149 1.2794a1.4552 1.4552 0 0 0-.0625.1055c-.208.3923-.2207.8372-.0371 1.25.2783.6258.9696 1.1175 2.3126 1.6467.8356.3292 1.5988.5411 1.6056.543 1.1046.2847 2.104.4277 2.969.4277 1.4173 0 2.4754-.3849 3.1525-1.1446 1.538.2651 2.791.1403 3.592.006.6773.7555 1.7332 1.1387 3.1467 1.1387.8649 0 1.8643-.143 2.969-.4278.0068-.0019.77-.2138 1.6056-.543 1.343-.5292 2.0343-1.0208 2.3126-1.6466.1836-.4129.171-.8577-.037-1.25a1.4685 1.4685 0 0 0-.0626-.1056c.346-.525.2795-1.0346.2149-1.2793-.0826-.3122-.2525-.5714-.4844-.7579.11-.1816.1831-.3788.2148-.5977.0669-.4595-.0862-.9193-.4316-1.293-.2688-.2913-.6495-.4513-1.0704-.4513-.0209 0-.0376.0008-.0588.0018.3162-.9966.4846-2.0518.4846-3.1523 0-5.807-4.7362-10.5144-10.5789-10.5144-5.8426 0-10.5788 4.7073-10.5788 10.5144Zm10.5788-9.4831c5.2727 0 9.5476 4.246 9.5476 9.483a9.4201 9.4201 0 0 1-.2696 2.2365c-.0039-.0047-.0079-.011-.0117-.0156-.274-.3255-.6679-.5059-1.1075-.5059-.352 0-.714.1155-1.0763.3438-.2403.1517-.5058.422-.7793.7598-.2534-.3492-.608-.5832-1.0137-.6465a1.5174 1.5174 0 0 0-.2344-.0176c-.9263 0-1.4828.7993-1.6935 1.5177-.1046.2426-.6065 1.3482-1.3614 2.0978-1.1681 1.1601-1.4458 2.3534-.8396 3.6382-.843.1029-1.5836.0927-2.365-.006.5906-1.212.3626-2.4388-.8426-3.6322-.755-.7496-1.2568-1.8552-1.3614-2.0978-.2107-.7184-.7673-1.5177-1.6935-1.5177-.078 0-.1568.0054-.2344.0176-.4057.0633-.7604.2973-1.0137.6465-.2735-.3379-.539-.6081-.7794-.7598-.3622-.2283-.7243-.3438-1.0762-.3438-.4266 0-.8094.171-1.0821.4786a9.4208 9.4208 0 0 1-.2598-2.1936c0-5.237 4.2749-9.483 9.5475-9.483zM8.6443 7.0036c-.4838.0043-.9503.2667-1.1934.7227-.3536.6633-.1006 1.4873.5645 1.84.351.1862.4883-.5261.836-.6485.3107-.1095.841.399 1.0078.086.3536-.6634.1025-1.4874-.5625-1.84a1.3659 1.3659 0 0 0-.6524-.1602Zm6.8403 0c-.2199-.002-.4426.05-.6504.1602-.665.3526-.9181 1.1766-.5645 1.84.1669.313.6971-.1955 1.0079-.086.3476.1224.4867.8347.838.6485.6649-.3527.916-1.1767.5624-1.84-.243-.456-.7096-.7184-1.1934-.7227Zm-9.7565 1.418a.8768.8768 0 0 0-.877.877c0 .4846.3925.877.877.877a.8768.8768 0 0 0 .877-.877.8768.8768 0 0 0-.877-.877zm12.6434 0c-.4845 0-.879.3925-.879.877 0 .4846.3945.877.879.877a.8768.8768 0 0 0 .877-.877.8768.8768 0 0 0-.877-.877zM8.7927 11.459c-.179-.003-.2793.1107-.2793.416 0 .8097.3874 2.125 1.4279 2.924.207-.7123 1.3453-1.2832 1.5079-1.2012.2315.1167.2191.4417.6074.7266.3884-.285.374-.6098.6056-.7266.1627-.082 1.3009.4889 1.5079 1.2012 1.0404-.799 1.4278-2.1144 1.4278-2.924 0-1.2212-1.583.6402-3.5413.6485-1.4686-.0061-2.7266-1.0558-3.2639-1.0645zM4.312 14.4768c.5792.365 1.6964 2.2751 2.1056 3.0177.1371.2488.371.3536.582.3536.4188 0 .7465-.4138.0391-.9395-1.0636-.791-.6914-2.0846-.1836-2.1642a.4302.4302 0 0 1 .0664-.004c.4616 0 .666.7892.666.7892s.5959 1.4898 1.6213 2.508c.942.9356 1.062 1.703.4961 2.6661-.0164-.004-.0159.0236-.1484.2149-.1853.2673-.4322.4688-.7188.6152-.5062.2269-1.1397.2696-1.7833.2696-1.037 0-2.1017-.1824-2.6975-.336-.0293-.0075-3.6505-.9567-3.1916-1.8224.0771-.1454.2033-.2031.3633-.2031.6463 0 1.823.9551 2.3283.9551.113 0 .196-.0865.2285-.2031.2249-.8045-3.2787-1.0522-2.9846-2.1642.0519-.1967.193-.2757.3907-.2754.854 0 2.7704 1.4923 3.172 1.4923.0307 0 .0525-.0085.0645-.0274.2012-.3227.1096-.5865-1.3087-1.4395-1.4182-.8533-2.4315-1.329-1.8653-1.9416.0651-.0707.1574-.1015.2695-.1015.8611.0002 2.8948 1.84 2.8948 1.84s.5487.5683.8809.5683c.0762 0 .1416-.0315.1855-.1054.2355-.3946-2.1858-2.2183-2.3224-2.971-.0926-.51.0641-.7676.3555-.7676-.0006.008.1701-.0285.4942.1759zm16.2257.5918c-.1366.7526-2.5579 2.5764-2.3224 2.9709.044.074.1092.1055.1855.1055.3321 0 .881-.5684.881-.5684s2.0336-1.8397 2.8947-1.84c.1121 0 .2044.0308.2695.1016.5662.6125-.447 1.0882-1.8653 1.9415-1.4183.853-1.51 1.1168-1.3087 1.4396.012.0188.0337.0273.0644.0273.4016 0 2.3181-1.4923 3.1721-1.4923.1977-.0002.3388.0787.3907.2754.294 1.112-3.2095 1.3597-2.9846 2.1642.0325.1166.1156.2032.2285.2032.5054 0 1.682-.9552 2.3283-.9552.16 0 .2862.0577.3633.2032.459.8656-3.1623 1.8149-3.1916 1.8224-.5958.1535-1.6605.336-2.6975.336-.6351 0-1.261-.0409-1.7638-.2599-.2949-.1472-.5488-.3516-.7383-.625-.0411-.0682-.1026-.1476-.1426-.205-.5726-.9679-.455-1.7371.4903-2.676 1.0254-1.0182 1.6212-2.508 1.6212-2.508s.2044-.7891.666-.7891a.4318.4318 0 0 1 .0665.0039c.5078.0796.88 1.3732-.1836 2.1642-.7074.5257-.3797.9395.039.9395.211 0 .445-.1047.5821-.3535.4092-.7426 1.5264-2.6527 2.1056-3.0178.5588-.3524.99-.1816.8497.5918z"/></symbol>
+  <symbol id="i-gh" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></symbol>
+  <!-- a poster on an easel -->
+  <symbol id="i-poster" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="13" rx="1.6"/><path d="M7.5 6.5h5M7.5 9.5h9M7.5 12h6.5M12 15.5v2.5M8 21.5l4-3.5 4 3.5"/><circle cx="16" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></g></symbol>
+  <!-- a paper -->
+  <symbol id="i-paper" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2.5H6.5A1.5 1.5 0 0 0 5 4v16a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 20V7.5Z"/><path d="M14 2.5v5h5M8.5 12h7M8.5 15h7M8.5 18h4.5"/></g></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4.2" fill="currentColor"/><path d="M3.5 22c0-5 3.8-8.2 8.5-8.2s8.5 3.2 8.5 8.2Z" fill="currentColor"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5Z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z" fill="currentColor"/></symbol>
+  <symbol id="i-prev" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <!-- a small table: header row and a grid -->
+  <symbol id="i-tbl" viewBox="0 0 30 22"><rect x=".5" y=".5" width="29" height="21" rx="2" fill="var(--lake-tint)" stroke="var(--lake)"/><path d="M.5 14h29M10.2 6.5v15M19.8 6.5v15" stroke="var(--lake)" stroke-width=".8"/><path d="M.5 6.5V2.5a2 2 0 0 1 2-2h25a2 2 0 0 1 2 2v4Z" fill="var(--lake)"/></symbol>
+</svg>
+
+<div class="bar" id="bar">
+  <a class="brand" href="#top">AMIGO</a>
+  <nav aria-label="Sections">
+    <a href="#interp">Problem</a><a href="#method">Method</a><a href="#tree">Ask the user</a><a href="#label">Benchmark</a><a href="#results">Results</a><a href="#demo">Demo</a>
+  </nav>
+  <button class="theme" id="theme" type="button" aria-label="Switch between light and dark mode">
+    <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 1.5v2.5M12 20v2.5M1.5 12H4M20 12h2.5M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg>
+    <svg class="moon" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 14.6A8.6 8.6 0 0 1 9.4 3.5a8.6 8.6 0 1 0 11.1 11.1Z"/></svg>
+  </button>
+</div>
+
+<div class="page" id="top">
 
   <header class="hero">
+    <!-- one question that branches into its interpretations; red pulses run down the branches -->
+    <svg class="hero-art" viewBox="0 0 560 380" aria-hidden="true">
+      <g id="heroTree"></g>
+    </svg>
     <div class="hero-top">
-      <h1 class="name">AMIGO</h1>
+      <h1 class="name" aria-label="AMIGO"><span>A</span><span>M</span><span>I</span><span>G</span><span>O</span></h1>
       <div class="logos">
         <img src="assets/logo_sorbonne.png" alt="Sorbonne University" width="3840" height="1554">
         <img src="assets/logo_lip6.png" alt="LIP6" width="1600" height="1502">
@@ -152,75 +475,275 @@
     <p class="authors">Allaa Boutaleb<sup>1</sup>, Bernd Amann<sup>1</sup>, Hubert Naacke<sup>1</sup>, Rafael Angarita<sup>2</sup></p>
     <p class="places"><span><sup>1</sup>Sorbonne University, LIP6</span><span><sup>2</sup>Nanterre University, LIP6</span></p>
     <nav class="links" aria-label="Links">
-      <a class="btn btn-demo" href="https://rubyando59-amigo.hf.space" target="_blank" rel="noopener"><span class="live" aria-hidden="true"></span>Try the live demo</a>
-      <a class="btn btn-line" href="poster.pdf" target="_blank" rel="noopener">View the poster</a>
-      <span class="btn soon">Pre-print <small>coming soon</small></span>
+      <a class="btn btn-demo" href="https://rubyando59-amigo.hf.space" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-hf"/></svg>Try the live demo</a>
+      <a class="btn btn-line" href="poster.pdf" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-poster"/></svg>Poster</a>
+      <span class="btn soon"><svg aria-hidden="true"><use href="#i-paper"/></svg>Pre-print <small>soon</small></span>
+      <span class="btn soon"><svg aria-hidden="true"><use href="#i-gh"/></svg>Code <small>soon</small></span>
     </nav>
   </header>
 
-  <section class="card lead">
-    <p>A question asked over a data lake is often ambiguous. Existing table retrievers return one set of tables, and so choose one interpretation in the user's place. <strong>AMIGO returns one table set per valid interpretation</strong>, and asks the user where the question is ambiguous.</p>
+  <section class="card lead" aria-label="Summary">
+    <div class="ask">
+      <svg aria-hidden="true"><use href="#i-person"/></svg>
+      <div class="bubble" id="typed">How many <span class="amb">Riverside</span> bike trips were made in 2025?</div>
+    </div>
+    <p>A question asked over a data lake is often ambiguous. Existing table retrievers return one set of tables, and so <strong>choose one interpretation in the user's place</strong>. AMIGO finds the valid interpretations, returns <strong>one table set for each</strong>, and asks the user where the question is ambiguous.</p>
+    <div class="stats">
+      <div class="stat"><b><span data-count="47">47</span> to <span data-count="67">67</span>%</b><span>of benchmark questions have two or more valid table sets (BIRD, Spider, MMQA)</span></div>
+      <div class="stat"><b>+<span data-count="12.6" data-dec="1">12.6</span></b><span>points of complete recall over an LLM that lists table sets, on a lake of 2,097 tables</span></div>
+      <div class="stat"><b><span data-count="6">6</span> of 6</b><span>benchmark versions where the SQL written from AMIGO's tables finds the most expected answers</span></div>
+      <div class="stat"><b>2 or 3</b><span>LLM calls per question. The search itself takes under a second</span></div>
+    </div>
   </section>
 
-  <section class="card" id="interpretations">
+  <!-- ===================================================================== 01 -->
+  <section class="card" id="interp">
     <div class="head"><span class="tile">01</span><h2>One question, several valid interpretations</h2></div>
-    <p>In this small lake, one question has six valid interpretations, and each gives a different count. They differ at three levels: the parts of the question, the columns that store each part, and the way the tables join.</p>
-    <figure class="fig-mid scroll" style="--least: 640px">
-      <a href="assets/interpretations.png"><img src="assets/interpretations.png" width="2101" height="1275" alt="The question “How many Riverside bike trips were made in 2025?” over a lake of four tables. Riverside may be a district or a station; a district may be stored in three columns, a station in one; trips may start or end there. This gives six table sets with six different counts."></a>
-    </figure>
-    <p class="hint">Swipe the figure sideways, or tap it to open it in full size.</p>
+    <p>In this small lake, the question has six valid interpretations. Each needs its own tables, and each gives its own count. None of them is wrong. <span class="sub">Hover or tap an answer to follow its path.</span></p>
+    <div class="fig scroll wide-fig" style="--least: 760px">
+      <svg viewBox="0 0 1000 570" role="img" aria-labelledby="interpT" id="interpSvg">
+        <title id="interpT">The question "How many Riverside bike trips were made in 2025?" over a lake of two databases. Riverside may be a district or a station; a district is stored in three columns, a station in one; a trip may start or end there. This gives six table sets with six different counts.</title>
+        <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="arrowhead" d="M0 0 10 5 0 10Z"/></marker></defs>
+        <!-- level bands -->
+        <rect class="band" x="0" y="168" width="1000" height="52" rx="12"/>
+        <rect class="band" x="0" y="230" width="1000" height="52" rx="12"/>
+        <rect class="band" x="0" y="292" width="1000" height="52" rx="12"/>
+        <g font-family="Montserrat" font-weight="700" font-size="20">
+          <circle cx="868" cy="194" r="14" fill="none" stroke="var(--ink)" stroke-width="2"/><text x="868" y="200" text-anchor="middle" font-size="15">1</text><text x="890" y="201">Parts</text>
+          <circle cx="868" cy="256" r="14" fill="none" stroke="var(--ink)" stroke-width="2"/><text x="868" y="262" text-anchor="middle" font-size="15">2</text><text x="890" y="263">Places</text>
+          <circle cx="868" cy="318" r="14" fill="none" stroke="var(--ink)" stroke-width="2"/><text x="868" y="324" text-anchor="middle" font-size="15">3</text><text x="890" y="325" font-size="17">Composition</text>
+        </g>
+        <!-- question -->
+        <use href="#i-person" x="0" y="30" width="44" height="44" style="color: var(--ink)"/>
+        <rect x="56" y="26" width="560" height="52" rx="26" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+        <text x="80" y="59" font-size="21">How many <tspan fill="var(--red)" font-weight="600">Riverside</tspan> bike trips were made in 2025?</text>
+        <path class="edge" d="M616 52H690" marker-end="url(#ah)"/>
+        <!-- lake -->
+        <g>
+          <rect x="700" y="4" width="296" height="150" rx="18" fill="none" stroke="var(--lake-soft)" stroke-width="1.6"/>
+          <text x="848" y="26" text-anchor="middle" class="lab muted">data lake</text>
+          <rect x="712" y="38" width="196" height="96" rx="12" fill="var(--soft)"/>
+          <rect x="916" y="38" width="70" height="96" rx="12" fill="var(--soft)"/>
+          <text x="810" y="148" text-anchor="middle" class="mono muted">bikeshare</text>
+          <text x="951" y="148" text-anchor="middle" class="mono muted">mobility</text>
+          <g class="lake-t" data-t="trip"><use href="#i-tbl" x="726" y="52" width="44" height="32"/><text x="748" y="104" text-anchor="middle" class="lab">trip</text></g>
+          <g class="lake-t" data-t="station"><use href="#i-tbl" x="788" y="52" width="44" height="32"/><text x="810" y="104" text-anchor="middle" class="lab">station</text></g>
+          <g class="lake-t" data-t="rider"><use href="#i-tbl" x="850" y="52" width="44" height="32"/><text x="872" y="104" text-anchor="middle" class="lab">rider</text></g>
+          <g class="lake-t" data-t="survey"><use href="#i-tbl" x="929" y="52" width="44" height="32"/><text x="951" y="104" text-anchor="middle" class="lab">survey</text></g>
+        </g>
+        <!-- edges, each with the leaves (1 to 6) whose path uses it -->
+        <path class="edge" data-l="1 2 3 4" d="M300 78 L230 172" marker-end="url(#ah)"/>
+        <path class="edge" data-l="5 6" d="M330 78 L716 172" marker-end="url(#ah)"/>
+        <path class="edge" data-l="1" d="M210 208 L95 238" marker-end="url(#ah)"/>
+        <path class="edge" data-l="2" d="M228 208 L255 238" marker-end="url(#ah)"/>
+        <path class="edge" data-l="3 4" d="M248 208 L430 238" marker-end="url(#ah)"/>
+        <path class="edge" data-l="5 6" d="M720 208 L720 238" marker-end="url(#ah)"/>
+        <path class="edge" data-l="3" d="M420 270 L378 300" marker-end="url(#ah)"/>
+        <path class="edge" data-l="4" d="M450 270 L510 300" marker-end="url(#ah)"/>
+        <path class="edge" data-l="5" d="M710 270 L652 300" marker-end="url(#ah)"/>
+        <path class="edge" data-l="6" d="M730 270 L788 300" marker-end="url(#ah)"/>
+        <path class="edge" data-l="1" d="M95 270 L90 380" marker-end="url(#ah)"/>
+        <path class="edge" data-l="2" d="M245 270 L240 380" marker-end="url(#ah)"/>
+        <path class="edge" data-l="3" d="M375 334 L375 380" marker-end="url(#ah)"/>
+        <path class="edge" data-l="4" d="M510 334 L510 380" marker-end="url(#ah)"/>
+        <path class="edge" data-l="5" d="M650 334 L650 380" marker-end="url(#ah)"/>
+        <path class="edge" data-l="6" d="M790 334 L790 380" marker-end="url(#ah)"/>
+        <!-- nodes -->
+        <g class="node part" data-l="1 2 3 4"><rect x="170" y="176" width="120" height="34" rx="17"/><text x="230" y="199" text-anchor="middle" font-size="16">a district?</text></g>
+        <g class="node part" data-l="5 6"><rect x="662" y="176" width="116" height="34" rx="17"/><text x="720" y="199" text-anchor="middle" font-size="16">a station?</text></g>
+        <g class="node" data-l="1"><rect x="20" y="240" width="150" height="30" rx="7"/><text x="95" y="260" text-anchor="middle" class="mono">survey.district</text></g>
+        <g class="node" data-l="2"><rect x="178" y="240" width="174" height="30" rx="7"/><text x="265" y="260" text-anchor="middle" class="mono">rider.home_district</text></g>
+        <g class="node" data-l="3 4"><rect x="366" y="240" width="150" height="30" rx="7"/><text x="441" y="260" text-anchor="middle" class="mono">station.district</text></g>
+        <g class="node" data-l="5 6"><rect x="658" y="240" width="124" height="30" rx="7"/><text x="720" y="260" text-anchor="middle" class="mono">station.name</text></g>
+        <g class="node" data-l="3"><rect x="317" y="302" width="116" height="30" rx="7"/><text x="375" y="322" text-anchor="middle" class="mono">start_station</text></g>
+        <g class="node" data-l="4"><rect x="456" y="302" width="108" height="30" rx="7"/><text x="510" y="322" text-anchor="middle" class="mono">end_station</text></g>
+        <g class="node" data-l="5"><rect x="592" y="302" width="116" height="30" rx="7"/><text x="650" y="322" text-anchor="middle" class="mono">start_station</text></g>
+        <g class="node" data-l="6"><rect x="736" y="302" width="108" height="30" rx="7"/><text x="790" y="322" text-anchor="middle" class="mono">end_station</text></g>
+        <!-- leaves: table set, then its answer -->
+        <g id="leaves"></g>
+      </svg>
+    </div>
+    <p class="hint">Swipe the figure sideways.</p>
+    <div class="readout" id="interpOut" aria-live="polite"></div>
+    <div class="levels">
+      <div><b><i>1</i>Parts</b>What is the question asking for? "Riverside" can name a district or a station.</div>
+      <div><b><i>2</i>Places</b>Which columns store each part? Three columns of this lake store districts.</div>
+      <div><b><i>3</i>Composition</b>How do the tables join? A trip meets a station where it starts or where it ends.</div>
+    </div>
+    <p class="note">The first level comes from the words alone. The other two come from the lake: ambiguity is a property of a question <em>and</em> a lake. The counts are illustrative.</p>
   </section>
 
+  <!-- ===================================================================== 02 -->
   <section class="card" id="where">
-    <div class="head"><span class="tile">02</span><h2>Where should ambiguity be handled?</h2></div>
-    <div class="split" style="--fig: 520px">
+    <div class="head"><span class="tile">02</span><h2>Why handle ambiguity at retrieval?</h2></div>
+    <div class="split">
       <div>
-        <p>A SQL query can only use the tables that were retrieved. An interpretation dropped at retrieval is <strong>lost for every later step</strong>.</p>
-        <p>So ambiguity has to be handled at retrieval, before any query is written.</p>
+        <p>A SQL query can only use the tables that were retrieved. An interpretation dropped at retrieval is <span class="hl">lost for every later step</span>.</p>
+        <p>Work on ambiguous text-to-SQL writes several queries, but over tables that are already chosen. Table retrievers return one set of tables. So the ambiguity is collapsed silently, before anyone sees it.</p>
+        <p class="sub">The six dots are the six valid interpretations of the question above.</p>
       </div>
-      <figure>
-        <a href="assets/where.png"><img src="assets/where.png" width="1675" height="1438" loading="lazy" alt="Six valid interpretations in the data lake. When ambiguity is handled at retrieval, as in AMIGO, six are left after retrieval and after SQL. When it is handled at SQL writing, four are left. When it is handled nowhere, one is left."></a>
-      </figure>
+      <div class="fig">
+        <svg viewBox="0 0 660 420" role="img" aria-labelledby="whereT" id="whereSvg">
+          <title id="whereT">Six valid interpretations in the lake. Handled at retrieval, as in AMIGO: six are left after retrieval and six after SQL. Handled at SQL writing: four, then four. Handled nowhere: four, then one.</title>
+          <g id="whereRows"></g>
+        </svg>
+      </div>
     </div>
   </section>
 
+  <!-- ===================================================================== 03 -->
   <section class="card" id="method">
-    <div class="head"><span class="tile">03</span><h2>AMIGO finds the interpretations, builds the search tree bottom up, then walks it down with the user</h2></div>
-    <p>AMIGO splits the question into parts, finds the columns that may store each part, and ranks the ways to join them by cost. The candidates are the leaves of a search tree, and each fork is a question that AMIGO can ask the user.</p>
-    <figure class="scroll" style="--least: 1000px">
-      <a href="assets/pipeline.png"><img src="assets/pipeline.png" width="2600" height="718" loading="lazy" alt="AMIGO's seven steps on the bike trips question: split the question into parts, find the places of each part, judge the places, search the links between tables, judge the joins, list the candidates with their costs, and build the search tree. The tree is built bottom up and asked top down."></a>
-    </figure>
-    <p class="hint">Swipe the figure sideways, or tap it to open it in full size.</p>
+    <div class="head"><span class="tile">03</span><h2>How AMIGO finds the interpretations</h2></div>
+    <p>AMIGO follows the three levels. It splits the question into parts, finds the columns that may store each part, and joins them from the most to the least likely. The candidates become the leaves of a search tree. <span class="sub">Press play, or step through.</span></p>
+    <div class="fig scroll wide-fig stepfig" id="pipe" style="--least: 900px">
+      <svg viewBox="0 0 1320 600" role="img" aria-labelledby="pipeT">
+        <title id="pipeT">AMIGO's seven steps on the Riverside question: split the question into parts, list the places of each part with a cost, judge the places, search the joins, judge the joins, list the candidates with their costs, build the search tree. The bottom row is built once per lake.</title>
+        <g id="pipeDraw"></g>
+      </svg>
+    </div>
+    <p class="hint">Swipe the figure sideways.</p>
+    <div class="controls">
+      <button class="ctl" id="pipePlay" type="button"><svg><use href="#i-pause"/></svg><span>Pause</span></button>
+      <button class="ctl" id="pipePrev" type="button" aria-label="Previous step"><svg><use href="#i-prev"/></svg></button>
+      <button class="ctl" id="pipeNext" type="button" aria-label="Next step"><svg><use href="#i-next"/></svg></button>
+      <div class="steps" id="pipeSteps"></div>
+    </div>
+    <div class="say" id="pipeSay" aria-live="polite"></div>
   </section>
 
-  <section class="card" id="results">
-    <div class="head"><span class="tile">04</span><h2>How does AMIGO compare to other approaches?</h2></div>
-    <p>Existing benchmarks label each question with one table set. We add the other valid table sets, and find several for about half to two thirds of the questions.</p>
-    <p>On three benchmarks, AMIGO finds more of the valid table sets than existing approaches, with far fewer unneeded tables, and the SQL queries written from its output return more of the expected answers.</p>
-    <figure class="scroll" style="--least: 1040px">
-      <a href="assets/results.png"><img src="assets/results.png" width="2501" height="1474" loading="lazy" alt="Complete recall against precision on BIRD, Spider and MMQA, against the single-valid label and against the multi-valid label, for AMIGO and the compared methods. Also shown: how the multi-valid label is built, BIRD questions in a lake of 2,097 tables, and the share of SQL answers found."></a>
-    </figure>
-    <p class="hint">Swipe the figure sideways, or tap it to open it in full size.</p>
-  </section>
-
-  <section class="card" id="forks">
-    <div class="head"><span class="tile">05</span><h2>Can we estimate ambiguity / complexity with AMIGO's output?</h2></div>
-    <p>Harder questions get wider trees. The number of forks grows overall with the number of valid table sets of a question, and with the number of tables that it needs.</p>
-    <div class="pair">
-      <figure>
-        <a href="assets/forks_ambiguity.png"><img src="assets/forks_ambiguity.png" width="980" height="900" loading="lazy" alt="Ambiguity: forks per question of AMIGO's tree on BIRD, Spider and MMQA, against the number of valid table sets of the question."></a>
-      </figure>
-      <figure>
-        <a href="assets/forks_complexity.png"><img src="assets/forks_complexity.png" width="980" height="900" loading="lazy" alt="Complexity: forks per question of AMIGO's tree on BIRD, Spider and MMQA, against the number of tables that the question needs."></a>
-      </figure>
+  <!-- ===================================================================== 04 -->
+  <section class="card" id="tree">
+    <div class="head"><span class="tile">04</span><h2>Answer AMIGO's questions</h2></div>
+    <p>Each fork of the tree is a question that AMIGO can ask: which database, table, column or join you mean. Each option comes with its share, the likeliest first. <span class="sub">Play the user: answer the forks below.</span></p>
+    <div class="walk">
+      <div class="fig scroll wide-fig" style="--least: 560px">
+        <svg viewBox="0 0 640 400" role="img" aria-labelledby="treeT" id="treeSvg">
+          <title id="treeT">The search tree of the Riverside question. Forks: which database (bikeshare .69, mobility .31), which table holds the place of the trip (station .71, rider .29), which column of station (district .60, name .40), how a trip joins a station (start .50, end .50). Six leaves, each a candidate table set with its cost.</title>
+          <g id="treeDraw"></g>
+        </svg>
+      </div>
+      <div class="askcard" id="askcard" aria-live="polite">
+        <div class="who"><i>A</i>AMIGO asks</div>
+        <p class="q" id="askQ">Which database?</p>
+        <div class="opts" id="askOpts"></div>
+        <div class="crumbs" id="askCrumbs"></div>
+        <div class="count"><b id="askLeft">6</b><span>table sets still possible</span></div>
+        <div class="controls">
+          <button class="ctl" id="askRestart" type="button"><svg><use href="#i-redo"/></svg>Restart</button>
+          <button class="ctl" id="askLazy" type="button">No user: keep every leaf</button>
+          <button class="ctl" id="askCons" type="button">Always pick the likeliest</button>
+        </div>
+      </div>
+    </div>
+    <div class="two" style="margin-top: 26px">
+      <div class="panel">
+        <h3>Many questions need no question at all</h3>
+        <p>When AMIGO finds one candidate, the tree is a single path and nothing is asked. Share of questions with a one-path tree:</p>
+        <div id="nofork"></div>
+      </div>
+      <div class="panel">
+        <h3>Right answers at the forks raise precision</h3>
+        <p>With a user who answers every fork right, P* (the share of returned table sets that are valid) rises, and R* stays within 0.3 points.</p>
+        <div id="informed"></div>
+      </div>
     </div>
   </section>
 
+  <!-- ===================================================================== 05 -->
+  <section class="card" id="label">
+    <div class="head"><span class="tile">05</span><h2>A benchmark with more than one right answer</h2></div>
+    <p>Existing benchmarks give each question one SQL query, so every other valid interpretation counts as a miss. We extend BIRD, Spider and MMQA with <strong>multi-valid labels</strong>: we vary the original query one column or table at a time, among those that some words of the question name, and keep each variant that a person could mean.</p>
+    <div class="fig scroll wide-fig stepfig" id="labfig" style="--least: 900px">
+      <svg viewBox="0 0 1240 430" role="img" aria-labelledby="labT">
+        <title id="labT">How a multi-valid label is built. 1: an LLM maps groups of words of the question to the tables and columns of the query. 2: the lake is searched with four signals. 3: an LLM votes three times on each option, with one planted decoy. 4: one query per kept option is written and run. 5: a stronger LLM reads the question, each query and its rows, and keeps or removes it. 6: one author checks a sample and agrees with 173 of 174.</title>
+        <g id="labDraw"></g>
+      </svg>
+    </div>
+    <p class="hint">Swipe the figure sideways.</p>
+    <div class="controls">
+      <button class="ctl" id="labPlay" type="button"><svg><use href="#i-pause"/></svg><span>Pause</span></button>
+      <button class="ctl" id="labPrev" type="button" aria-label="Previous step"><svg><use href="#i-prev"/></svg></button>
+      <button class="ctl" id="labNext" type="button" aria-label="Next step"><svg><use href="#i-next"/></svg></button>
+      <div class="steps" id="labSteps"></div>
+    </div>
+    <div class="say" id="labSay" aria-live="polite"></div>
+    <div class="bigstats" id="meters">
+      <div class="meter"><div class="top"><span class="bn">BIRD</span><b data-count="47.3" data-dec="1">47.3</b></div><div class="track"><div class="fill" style="--w: 47.3%"></div></div><small>% of questions with 2+ valid table sets (1.88 per question)</small></div>
+      <div class="meter"><div class="top"><span class="bn">Spider</span><b data-count="57.3" data-dec="1">57.3</b></div><div class="track"><div class="fill" style="--w: 57.3%"></div></div><small>% of questions with 2+ valid table sets (2.35 per question)</small></div>
+      <div class="meter"><div class="top"><span class="bn">MMQA</span><b data-count="67.3" data-dec="1">67.3</b></div><div class="track"><div class="fill" style="--w: 67.3%"></div></div><small>% of questions with 2+ valid table sets (3.48 per question)</small></div>
+    </div>
+    <p class="note">The labels vary the places only, not the parts or the composition, so they are not complete: they hold more valid interpretations than the original query alone. Of 9,737 planted decoys, the LLM accepted 5.</p>
+  </section>
+
+  <!-- ===================================================================== 06 -->
+  <section class="card" id="results">
+    <div class="head"><span class="tile">06</span><h2>How does AMIGO compare?</h2></div>
+    <p>We score every method twice. Against the benchmark's own label (one table set per question), at the level of tables. Against our multi-valid label, at the level of interpretations: a returned table set counts only when it equals a valid one.</p>
+    <div class="controls" style="margin: 0 0 6px">
+      <div class="seg" role="group" aria-label="Label">
+        <button type="button" data-label="multi" aria-pressed="true">Multi-valid label</button>
+        <button type="button" data-label="single" aria-pressed="false">Single-valid label</button>
+      </div>
+      <div class="seg" role="group" aria-label="Zoom" id="zoomSeg">
+        <button type="button" data-z="0" aria-pressed="true">All methods</button>
+        <button type="button" data-z="1" aria-pressed="false">Zoom on the leaders</button>
+      </div>
+    </div>
+    <p id="scatterSay" style="margin: 10px 0 4px"></p>
+    <div class="legend" id="legend"></div>
+    <div class="chart-grid" id="scatters"></div>
+    <p class="note" id="scatterNote"></p>
+
+    <div class="two" style="margin-top: 30px">
+      <div class="panel">
+        <p class="kicker">A bigger lake</p>
+        <h3>LLM sets falls behind when the lake grows</h3>
+        <p>LLM sets, a strong baseline we define, gives an LLM the 20 tables closest to the question. On a lake of 2,097 tables, these 20 hold every needed table for only 77.2% of the labeled table sets. AMIGO searches each part on its own, by meaning and by stored values, and still reaches 92.0%.</p>
+        <div class="seg" role="group" aria-label="Score" id="lakeSeg">
+          <button type="button" data-k="CR" aria-pressed="true">CR</button>
+          <button type="button" data-k="R*" aria-pressed="false">R*</button>
+          <button type="button" data-k="CR*" aria-pressed="false">CR*</button>
+          <button type="button" data-k="P*" aria-pressed="false">P*</button>
+        </div>
+        <div id="lake" class="chart"></div>
+      </div>
+      <div class="panel">
+        <p class="kicker">SQL answers</p>
+        <h3>More of the expected answers</h3>
+        <p>An LLM writes one SQL query per returned table set. Leaving out the oracle, SQL written from AMIGO's tables finds the most expected answers on every version.</p>
+        <div class="seg" role="group" aria-label="Label" id="sqlSeg">
+          <button type="button" data-label="multi" aria-pressed="true">Multi-valid</button>
+          <button type="button" data-label="single" aria-pressed="false">Single-valid</button>
+        </div>
+        <div id="sql" class="chart"></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top: 22px">
+      <p class="kicker">Tight table sets</p>
+      <h3>Fewer unneeded tables for the SQL writer</h3>
+      <p>On the answers that both found, AMIGO's one most likely table set holds 0.04 to 0.39 unneeded tables, against 1.06 to 1.28 for CORE-T's. Its SQL is never less accurate there, and better on Spider and MMQA (multi-valid).</p>
+      <div id="tight"></div>
+    </div>
+  </section>
+
+  <!-- ===================================================================== 07 -->
+  <section class="card" id="forks">
+    <div class="head"><span class="tile">07</span><h2>The tree measures how hard a question is</h2></div>
+    <p>Harder questions get wider trees. The number of forks grows overall with the number of valid table sets of a question (its ambiguity) and with the number of tables it needs (its complexity).</p>
+    <div class="seg" role="group" aria-label="Measure" id="forkSeg">
+      <button type="button" data-k="labeled_sets" aria-pressed="true">Ambiguity: valid table sets</button>
+      <button type="button" data-k="tables" aria-pressed="false">Complexity: tables needed</button>
+    </div>
+    <div id="forkChart" class="chart" style="max-width: 760px; margin-top: 10px"></div>
+    <p class="note">Mean forks per question with its 95% bootstrap interval. Groups of fewer than 20 questions are left out.</p>
+  </section>
+
+  <!-- ===================================================================== demo -->
   <section class="demo" id="demo">
     <div class="demo-text">
-      <div class="head"><span class="tile">06</span><span class="live" aria-hidden="true"></span><h2>LIVE DEMO</h2></div>
+      <div class="head"><span class="tile">08</span><span class="live" aria-hidden="true"></span><h2>LIVE DEMO</h2></div>
       <p>Ask your own question over the BIRD and Spider lakes, and answer AMIGO's questions.</p>
-      <a class="btn btn-demo" href="https://rubyando59-amigo.hf.space" target="_blank" rel="noopener">Open the live demo</a>
+      <a class="btn btn-demo" href="https://rubyando59-amigo.hf.space" target="_blank" rel="noopener"><svg aria-hidden="true"><use href="#i-hf"/></svg>Open the live demo on Hugging Face</a>
       <span class="url">rubyando59-amigo.hf.space</span>
     </div>
     <div class="qr">
@@ -231,8 +754,11 @@
 
 </div>
 <footer>
-  <p>Pre-print coming soon. <a href="poster.pdf">View the poster</a>.</p>
+  <p>Pre-print and code coming soon. <a href="poster.pdf">View the poster</a>.</p>
   <p>Sorbonne University, LIP6 · Nanterre University</p>
 </footer>
+<div class="tip" id="tip" role="tooltip"></div>
+<script src="assets/data.js"></script>
+<script src="assets/page.js"></script>
 </body>
 </html>

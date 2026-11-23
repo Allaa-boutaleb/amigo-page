@@ -24,6 +24,7 @@
 <meta property="og:type" content="website">
 <meta name="color-scheme" content="light">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23E6332A'/%3E%3Cpath d='M16 7 7.5 25h4l1.6-3.6h5.8L20.5 25h4L16 7Zm-1.4 11.2L16 14.9l1.4 3.3h-2.8Z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" integrity="sha512-fHwaWebuwA7NSF5Qg/af4UeDx9XqUpYpOGgubo3yWu+b2IQR4UeQwbb42Ti7gVAjNtVoI/I9TEoYeu9omwcC6g==" crossorigin="anonymous" referrerpolicy="no-referrer">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
@@ -71,7 +72,7 @@
   a { color: var(--lake); }
   :focus-visible { outline: 3px solid var(--red); outline-offset: 3px; border-radius: 6px; }
   code, .mono { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: .86em; }
-  .page { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .page { max-width: 1440px; margin: 0 auto; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   /* ---------- sticky bar ---------- */
@@ -299,18 +300,19 @@
   #pipe .dbox.fillc { fill: var(--card); }
   #pipe .lakebox { fill: color-mix(in srgb, var(--lake) 7%, var(--card)); stroke: var(--lake); stroke-width: 1.4; }
   #pipe .brace { stroke: var(--muted); stroke-width: 1.6; fill: none; }
-  /* the tree comes fork by fork, from the leaves to the root */
-  .js #pipe [data-s="7"] .tw { transition: opacity .45s ease calc(.25s + var(--d) * .6s); }
-  .js #pipe [data-s="7"].later .tw { opacity: 0; transition: none; }
+  /* inside a step, its parts come one after the other (the tree: fork by fork) */
+  .js #pipe [data-s] .tw { transition: opacity .45s ease calc(.25s + var(--d) * .6s); }
+  .js #pipe [data-s].later .tw { opacity: 0; transition: none; }
   .costs { margin: 26px 0 0; }
   .costgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 12px 0 0; }
   .costgrid > div { background: var(--soft-2); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
   .costgrid h4 { font: 700 15.5px/1.3 Montserrat, sans-serif; margin: 0 0 8px; }
   .costgrid h4 span { color: var(--muted); font-weight: 500; }
-  .costgrid .eq { font-family: "JetBrains Mono", monospace; font-size: 14.5px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0 0 8px; }
+  .costgrid .txd { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 2px 10px; margin: 0 0 10px; overflow-x: auto; overflow-y: hidden; font-size: 15px; }
+  .costgrid .txd .katex-display { margin: .55em 0; }
+  .costgrid .tx .katex { font-size: 1.05em; }
   .costgrid p, .costgrid li { font-size: 15px; color: var(--ink-2); margin: 0 0 6px; }
   .costgrid ul { margin: 0; padding-left: 18px; }
-  .costgrid .ex { color: var(--muted); margin: 6px 0 0; }
   #pipe .pulse { fill: var(--red); }
 
   /* ---------- 04 tree walk ---------- */
@@ -436,6 +438,7 @@
     .card { padding: 24px 18px 26px; }
     .demo { padding: 26px 22px; }
     .levels, .bigstats, .costgrid { grid-template-columns: minmax(0, 1fr); }
+    .costgrid .txd { font-size: 12px; }
     .btn-demo { width: 100%; justify-content: center; }
     .tile { min-width: 50px; font-size: 22px; }
     .head { gap: 13px; align-items: flex-start; }
@@ -622,7 +625,7 @@
     <p>AMIGO follows the three levels. It splits the question into parts, finds the columns that may store each part, and combines them from the lowest cost up. The candidates become the leaves of a search tree. <span class="sub">Press play, or step through.</span></p>
     <div class="fig scroll wide-fig stepfig" id="pipe" style="--least: 1100px">
       <svg viewBox="0 0 1500 626" role="img" aria-labelledby="pipeT">
-        <title id="pipeT">AMIGO's seven steps on the Riverside question: split the question into parts, list the places of each part with a cost, judge the places, combine one kept place per part, judge the joins, list the candidates with their costs, build the search tree with the share of each option. Dashed arrows go from the user to steps 1, 3 and 5: the user can do them in place of the LLM, or correct its output. The bottom row is the offline phase: the value index and column profiles, the descriptions and embeddings, and the joinability graph are built from the data lake.</title>
+        <title id="pipeT">AMIGO on the Riverside question. Offline phase: the value index and column profiles, the descriptions and embeddings, and the joinability graph are built from the data lake. Then the user asks the question, and AMIGO runs seven steps: split the question into parts, list the places of each part with a cost, judge the places, combine one kept place per part, judge the joins, list the candidates with their costs, build the search tree with the share of each option. Dashed arrows go from the user to steps 1, 3 and 5: the user can do them in place of the LLM, or correct its output.</title>
         <g id="pipeDraw"></g>
       </svg>
     </div>
@@ -637,45 +640,40 @@
     <p class="note"><b>Dashed arrows: the user can step in, and never has to.</b> Steps 1, 3 and 5 are done by an LLM. The user can do each of them in place of the LLM, or after it to correct its output.</p>
     <div class="costs">
       <h3>The cost model</h3>
-      <p>One number ranks everything: the lower the cost, the more likely. A place has a cost, a join has a cost, a candidate adds them up, and the tree turns the sums into shares.</p>
+      <p>The lower the cost, the more likely the interpretation.</p>
       <div class="costgrid">
         <div>
-          <h4>Cost of a place <span>(step 2)</span></h4>
-          <p class="eq">cost(h) = log<sub>2</sub>(1 + r(h)) + v(h)</p>
+          <h4>Place <span>(step 2)</span></h4>
+          <div class="txd">\mathrm{cost}(h) = \log_2\big(1 + r(h)\big) + v(h)</div>
+          <div class="txd">v(h) = \begin{cases} \log_2(1+N) - \log_2(1+M) &amp; \text{if } h \text{ lacks the value and } M &gt; 0 \\ 0 &amp; \text{otherwise} \end{cases}</div>
           <ul>
-            <li><b>r(h)</b>: the rank of column h by similarity to the part, among all the columns of the lake. It comes from the embeddings. The closest column has rank 1 and costs 1.</li>
-            <li><b>v(h)</b>: the value term. It comes from the value index. It is 0, unless other places of the part store its value and h does not. Then v(h) = log<sub>2</sub>(1 + N) &minus; log<sub>2</sub>(1 + M), with N the number of places of the part and M the number that store the value.</li>
+            <li><span class="tx">r(h)</span>: rank of column <span class="tx">h</span> by similarity to the part (embeddings).</li>
+            <li><span class="tx">N</span>: places of the part; <span class="tx">M</span>: those that store its value (value index).</li>
           </ul>
-          <p class="ex">Example, not drawn: <code>trip.start_station</code> is 5th by similarity and does not store "Riverside", while 4 of the 5 places do. Its cost is log<sub>2</sub>(6) + log<sub>2</sub>(6) &minus; log<sub>2</sub>(5) = 2.85.</p>
         </div>
         <div>
-          <h4>Cost of a join <span>(step 4)</span></h4>
-          <p class="eq">cost(e) = log<sub>2</sub>(1 + min(deg t, deg t&prime;))</p>
+          <h4>Join <span>(step 4)</span></h4>
+          <div class="txd">\mathrm{cost}(e) = \log_2\big(1 + \min(\deg t, \deg t')\big)</div>
           <ul>
-            <li><b>e</b>: a join between two tables t and t&prime;.</li>
-            <li><b>deg t</b>: the number of tables that t is connected to in the joinability graph.</li>
-            <li>Every join costs at least 1. A join between two tables that are each connected to many tables costs more.</li>
+            <li><span class="tx">e</span>: a join between tables <span class="tx">t</span> and <span class="tx">t'</span>.</li>
+            <li><span class="tx">\deg t</span>: number of tables linked to <span class="tx">t</span> in the joinability graph.</li>
           </ul>
-          <p class="ex">Example: <code>station</code> is connected to <code>trip</code> only, so trip &#8904; station costs log<sub>2</sub>(2) = 1.</p>
         </div>
         <div>
-          <h4>Cost of a candidate <span>(steps 4 to 6)</span></h4>
-          <p class="eq">cost(x) = sum of the costs of its places + sum of the costs of its joins</p>
+          <h4>Candidate <span>(steps 4 to 6)</span></h4>
+          <div class="txd">\mathrm{cost}(x) = \sum_{j} \mathrm{cost}(h_j) + \sum_{e \in E_x} \mathrm{cost}(e)</div>
           <ul>
-            <li>A candidate x holds one place per part, and the joins that connect their tables.</li>
-            <li>The candidates come out from the lowest cost up.</li>
-            <li>The joins kept by the join judge (start or end) do not change the cost.</li>
+            <li><span class="tx">h_j</span>: the place of part <span class="tx">j</span>; <span class="tx">E_x</span>: the joins of <span class="tx">x</span>.</li>
+            <li>Example: <span class="tx">\mathrm{cost}(x_1) = 1 + 1 + 1 + 1 = 4</span>.</li>
           </ul>
-          <p class="ex">Example: x&#8321; = 1 + 1 + 1 for its places, + 1 for its join = 4. x&#8323; = 1 + 1.58 + 1 + 1 = 4.58.</p>
         </div>
         <div>
-          <h4>Share of an option in the tree <span>(step 7)</span></h4>
-          <p class="eq">weight = 2<sup>&minus;cost</sup> &nbsp; share = weight / sum of the weights of the fork</p>
+          <h4>Share in the tree <span>(step 7)</span></h4>
+          <div class="txd">\mathrm{share}(o) = \frac{2^{-\mathrm{cost}(o)}}{\sum_{o'} 2^{-\mathrm{cost}(o')}}</div>
           <ul>
-            <li>The weight of an option uses the cost of its lowest-cost leaf.</li>
-            <li>The option with the largest share is shown first.</li>
+            <li><span class="tx">o</span>: an option of a fork; <span class="tx">\mathrm{cost}(o)</span>: the cost of its lowest-cost leaf.</li>
+            <li>Example: <span class="tx">\mathrm{share}(\text{bikeshare}) = \dfrac{2^{-4}}{2^{-4} + 2^{-5.17}} = .69</span>.</li>
           </ul>
-          <p class="ex">Example, the database fork: bikeshare has 2<sup>&minus;4</sup> = 0.0625, mobility has 2<sup>&minus;5.17</sup> = 0.0278. The shares are .69 and .31.</p>
         </div>
       </div>
     </div>
@@ -828,6 +826,7 @@
   <p>Sorbonne University, LIP6 · Nanterre University</p>
 </footer>
 <div class="tip" id="tip" role="tooltip"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js" integrity="sha512-LQNxIMR5rXv7o+b1l8+N1EZMfhG7iFZ9HhnbJkTp4zjNr5Wvst75AqUeFDxeRUa7l5vEDyUiAip//r+EFLLCyA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="assets/data.js"></script>
 <script src="assets/page.js"></script>
 </body>

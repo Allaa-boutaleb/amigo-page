@@ -283,9 +283,33 @@
   #pipe .gedge.hot { stroke: var(--red); stroke-width: 3.2; }
   #pipe .tnode rect { fill: var(--card); stroke: var(--lake); stroke-width: 1.5; }
   #pipe .tnode text { fill: var(--lake); font-weight: 700; font-size: 13px; }
-  #pipe .fork circle { fill: var(--card); stroke: var(--red); stroke-width: 1.8; }
-  #pipe .fork text { fill: var(--red-ink); font-weight: 700; font-size: 12px; }
-  #pipe .branch { stroke: var(--red); stroke-width: 1.6; fill: none; }
+  #pipe { --teal-ink: color-mix(in srgb, var(--teal) 72%, var(--ink)); }
+  #pipe .fork rect { fill: var(--card); stroke: var(--teal); stroke-width: 1.5; }
+  #pipe .fork text { fill: var(--teal-ink); font-weight: 600; font-style: italic; font-size: 12.5px; }
+  #pipe .branch { stroke: var(--teal); stroke-width: 1.6; fill: none; }
+  #pipe .oname, #pipe .utext { fill: var(--teal-ink); }
+  #pipe .shr { fill: color-mix(in srgb, var(--teal) 14%, var(--card)); }
+  #pipe .sval { fill: var(--teal-ink); font-weight: 700; }
+  #pipe .ctext { fill: var(--orange); font-weight: 700; }
+  #pipe .asks { stroke: var(--teal); stroke-width: 1.8; fill: none; stroke-linejoin: round; }
+  #pipe .opt { stroke: var(--teal); stroke-width: 1.6; fill: none; stroke-dasharray: 6 4; stroke-linejoin: round; }
+  #pipe .sbox { fill: color-mix(in srgb, var(--purple) 7%, var(--card)); stroke: color-mix(in srgb, var(--purple) 45%, var(--card)); stroke-width: 1.3; }
+  #pipe .dbox { fill: none; stroke: var(--line); stroke-width: 1.4; stroke-dasharray: 5 4; }
+  #pipe .dbox.fillc { fill: var(--card); }
+  #pipe .lakebox { fill: color-mix(in srgb, var(--lake) 7%, var(--card)); stroke: var(--lake); stroke-width: 1.4; }
+  #pipe .brace { stroke: var(--muted); stroke-width: 1.6; fill: none; }
+  /* the tree comes fork by fork, from the leaves to the root */
+  .js #pipe [data-s="7"] .tw { transition: opacity .45s ease calc(.25s + var(--d) * .6s); }
+  .js #pipe [data-s="7"].later .tw { opacity: 0; transition: none; }
+  .costs { margin: 26px 0 0; }
+  .costgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 12px 0 0; }
+  .costgrid > div { background: var(--soft-2); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+  .costgrid h4 { font: 700 15.5px/1.3 Montserrat, sans-serif; margin: 0 0 8px; }
+  .costgrid h4 span { color: var(--muted); font-weight: 500; }
+  .costgrid .eq { font-family: "JetBrains Mono", monospace; font-size: 14.5px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; margin: 0 0 8px; overflow-x: auto; white-space: nowrap; }
+  .costgrid p, .costgrid li { font-size: 15px; color: var(--ink-2); margin: 0 0 6px; }
+  .costgrid ul { margin: 0; padding-left: 18px; }
+  .costgrid .ex { color: var(--muted); margin: 6px 0 0; }
   #pipe .pulse { fill: var(--red); }
 
   /* ---------- 04 tree walk ---------- */
@@ -410,7 +434,7 @@
     .hero { padding: 28px 22px 26px; }
     .card { padding: 24px 18px 26px; }
     .demo { padding: 26px 22px; }
-    .levels, .bigstats { grid-template-columns: minmax(0, 1fr); }
+    .levels, .bigstats, .costgrid { grid-template-columns: minmax(0, 1fr); }
     .btn-demo { width: 100%; justify-content: center; }
     .tile { min-width: 50px; font-size: 22px; }
     .head { gap: 13px; align-items: flex-start; }
@@ -552,7 +576,7 @@
         <g class="node part" data-l="1 2 3 4"><rect x="170" y="176" width="120" height="34" rx="17"/><text x="230" y="199" text-anchor="middle" font-size="16">a district?</text></g>
         <g class="node part" data-l="5 6"><rect x="662" y="176" width="116" height="34" rx="17"/><text x="720" y="199" text-anchor="middle" font-size="16">a station?</text></g>
         <g class="node" data-l="1"><rect x="20" y="240" width="150" height="30" rx="7"/><text x="95" y="260" text-anchor="middle" class="mono">survey.district</text></g>
-        <g class="node" data-l="2"><rect x="178" y="240" width="174" height="30" rx="7"/><text x="265" y="260" text-anchor="middle" class="mono">rider.home_district</text></g>
+        <g class="node" data-l="2"><rect x="178" y="240" width="174" height="30" rx="7"/><text x="265" y="260" text-anchor="middle" class="mono">rider.district</text></g>
         <g class="node" data-l="3 4"><rect x="366" y="240" width="150" height="30" rx="7"/><text x="441" y="260" text-anchor="middle" class="mono">station.district</text></g>
         <g class="node" data-l="5 6"><rect x="658" y="240" width="124" height="30" rx="7"/><text x="720" y="260" text-anchor="middle" class="mono">station.name</text></g>
         <g class="node" data-l="3"><rect x="317" y="302" width="116" height="30" rx="7"/><text x="375" y="322" text-anchor="middle" class="mono">start_station</text></g>
@@ -594,10 +618,10 @@
   <!-- ===================================================================== 03 -->
   <section class="card" id="method">
     <div class="head"><span class="tile">03</span><h2>How AMIGO finds the interpretations</h2></div>
-    <p>AMIGO follows the three levels. It splits the question into parts, finds the columns that may store each part, and joins them from the most to the least likely. The candidates become the leaves of a search tree. <span class="sub">Press play, or step through.</span></p>
-    <div class="fig scroll wide-fig stepfig" id="pipe" style="--least: 900px">
-      <svg viewBox="0 0 1320 600" role="img" aria-labelledby="pipeT">
-        <title id="pipeT">AMIGO's seven steps on the Riverside question: split the question into parts, list the places of each part with a cost, judge the places, search the joins, judge the joins, list the candidates with their costs, build the search tree. The bottom row is built once per lake.</title>
+    <p>AMIGO follows the three levels. It splits the question into parts, finds the columns that may store each part, and combines them from the lowest cost up. The candidates become the leaves of a search tree. <span class="sub">Press play, or step through.</span></p>
+    <div class="fig scroll wide-fig stepfig" id="pipe" style="--least: 1100px">
+      <svg viewBox="0 0 1500 626" role="img" aria-labelledby="pipeT">
+        <title id="pipeT">AMIGO's seven steps on the Riverside question: split the question into parts, list the places of each part with a cost, judge the places, combine one kept place per part, judge the joins, list the candidates with their costs, build the search tree with the share of each option. Dashed arrows go from the user to steps 1, 3 and 5: the user can do them in place of the LLM, or correct its output. The bottom row is the offline phase: the value index and column profiles, the descriptions and embeddings, and the joinability graph are built from the data lake.</title>
         <g id="pipeDraw"></g>
       </svg>
     </div>
@@ -609,6 +633,51 @@
       <div class="steps" id="pipeSteps"></div>
     </div>
     <div class="say" id="pipeSay" aria-live="polite"></div>
+    <p class="note"><b>Dashed arrows: the user can step in, and never has to.</b> Steps 1, 3 and 5 are done by an LLM. The user can do each of them in place of the LLM, or after it to correct its output.</p>
+    <div class="costs">
+      <h3>The cost model</h3>
+      <p>One number ranks everything: the lower the cost, the more likely. A place has a cost, a join has a cost, a candidate adds them up, and the tree turns the sums into shares.</p>
+      <div class="costgrid">
+        <div>
+          <h4>Cost of a place <span>(step 2)</span></h4>
+          <p class="eq">cost(h) = log<sub>2</sub>(1 + r(h)) + v(h)</p>
+          <ul>
+            <li><b>r(h)</b>: the rank of column h by similarity to the part, among all the columns of the lake. It comes from the embeddings. The closest column has rank 1 and costs 1.</li>
+            <li><b>v(h)</b>: the value term. It comes from the value index. It is 0, unless other places of the part store its value and h does not. Then v(h) = log<sub>2</sub>(1 + N) &minus; log<sub>2</sub>(1 + M), with N the number of places of the part and M the number that store the value.</li>
+          </ul>
+          <p class="ex">Example, not drawn: <code>trip.start_station</code> is 5th by similarity and does not store "Riverside", while 4 of the 5 places do. Its cost is log<sub>2</sub>(6) + log<sub>2</sub>(6) &minus; log<sub>2</sub>(5) = 2.85.</p>
+        </div>
+        <div>
+          <h4>Cost of a join <span>(step 4)</span></h4>
+          <p class="eq">cost(e) = log<sub>2</sub>(1 + min(deg t, deg t&prime;))</p>
+          <ul>
+            <li><b>e</b>: a join between two tables t and t&prime;.</li>
+            <li><b>deg t</b>: the number of tables that t is connected to in the joinability graph.</li>
+            <li>Every join costs at least 1. A join between two tables that are each connected to many tables costs more.</li>
+          </ul>
+          <p class="ex">Example: <code>station</code> is connected to <code>trip</code> only, so trip &#8904; station costs log<sub>2</sub>(2) = 1.</p>
+        </div>
+        <div>
+          <h4>Cost of a candidate <span>(steps 4 to 6)</span></h4>
+          <p class="eq">cost(x) = sum of the costs of its places + sum of the costs of its joins</p>
+          <ul>
+            <li>A candidate x holds one place per part, and the joins that connect their tables.</li>
+            <li>The candidates come out from the lowest cost up.</li>
+            <li>The joins kept by the join judge (start or end) do not change the cost.</li>
+          </ul>
+          <p class="ex">Example: x&#8321; = 1 + 1 + 1 for its places, + 1 for its join = 4. x&#8323; = 1 + 1.58 + 1 + 1 = 4.58.</p>
+        </div>
+        <div>
+          <h4>Share of an option in the tree <span>(step 7)</span></h4>
+          <p class="eq">weight = 2<sup>&minus;cost</sup> &nbsp; share = weight / sum of the weights of the fork</p>
+          <ul>
+            <li>The weight of an option uses the cost of its lowest-cost leaf.</li>
+            <li>The option with the largest share is shown first.</li>
+          </ul>
+          <p class="ex">Example, the database fork: bikeshare has 2<sup>&minus;4</sup> = 0.0625, mobility has 2<sup>&minus;5.17</sup> = 0.0278. The shares are .69 and .31.</p>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- ===================================================================== 04 -->

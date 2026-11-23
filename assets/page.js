@@ -246,112 +246,152 @@
     <rect x="-17" y="-17" width="34" height="34" rx="5" fill="var(--ink)"/><rect x="-13" y="-13" width="26" height="26" rx="3" fill="none" stroke="var(--card)" stroke-width="1"/>
     <text x="0" y="4" text-anchor="middle" font-size="9.5" font-weight="700" style="fill:var(--card)">${label}</text></g>`;
 
-  // ------------------------------------------------------------------ 03 pipeline
+  // ------------------------------------------------------------------ 03 pipeline (the paper's method figure)
   (function pipeline() {
     const g = $("#pipeDraw");
-    const places = [
-      [1, "trip.id", "1.00", 1], [1, "survey.weekly_trips", "1.58", 1], [1, "rider.id", "2.00", 0],
-      [2, "station.district", "1.00", 1], [2, "station.name", "1.58", 1], [2, "survey.district", "2.00", 1],
-      [2, "rider.home_district", "2.32", 1], [2, "trip.start_station", "2.85", 0],
-      [3, "trip.started_at", "1.00", 1], [3, "survey.year", "1.58", 1]];
-    const ys = [132, 164, 196, 244, 276, 308, 340, 372, 420, 452];
+    // [column, cost, kept by the place judge]
+    const places = [["trip.id", "1", 1], ["rider.id", "2", 0],
+      ["station.district", "1", 1], ["station.name", "1.58", 1], ["rider.district", "2.32", 1], ["survey.district", "2", 1],
+      ["trip.started_at", "1", 1], ["survey.year", "1.58", 1]];
+    const ys = [140, 172, 220, 252, 284, 316, 364, 396];
+    const sbox = (x, y, w, hh) => `<rect class="sbox" x="${x}" y="${y}" width="${w}" height="${hh}" rx="10"/>`;
+    const tbl = (x, y, t) => `<use href="#i-tbl" x="${x}" y="${y - 8}" width="20" height="15"/><text x="${x + 26}" y="${y + 4}" class="mono">${t}</text>`;
+    const db = (x, y, t) => `<ellipse cx="${x + 7}" cy="${y - 5}" rx="7" ry="2.6" fill="none" stroke="var(--lake)" stroke-width="1.3"/>
+      <path d="M${x} ${y - 5}v10c0 1.5 3 2.6 7 2.6s7-1.1 7-2.6v-10" fill="none" stroke="var(--lake)" stroke-width="1.3"/>
+      <text x="${x + 22}" y="${y + 5}" class="mono" font-weight="700">${t}</text>`;
     let h = "";
+    // the user: asks the question (solid), and can do steps 1, 3 and 5 in place of the LLM or after it (dashed)
+    h += `<path class="asks" d="M1436 114V-24H168V-2" marker-end="url(#aht)"/>
+      <path class="opt" d="M168 -24H-18V91H-8" marker-end="url(#aho)"/>
+      <path class="opt" d="M389 -24V16" marker-end="url(#aho)"/>
+      <path class="opt" d="M717 -24V16" marker-end="url(#aho)"/>
+      <text x="1426" y="-31" text-anchor="end" class="small utext">the user asks the question</text>
+      <path class="opt" d="M790 6h34" marker-end="url(#aho)"/>
+      <text x="834" y="3" class="small utext">optional: the user does this step in place of the LLM,</text>
+      <text x="834" y="18" class="small utext">or after it to correct its output</text>
+      <use href="#i-person" x="1422" y="118" width="28" height="28" style="color:var(--teal)"/>`;
     // question
-    h += `<rect x="0" y="6" width="600" height="46" rx="23" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
-      <text x="22" y="36" font-size="19">How many <tspan fill="var(--red)" font-weight="600">Riverside</tspan> <tspan fill="var(--red)" font-weight="600">bike trips</tspan> were made in <tspan fill="var(--red)" font-weight="600">2025</tspan>?</text>`;
-    h += hdr(1, 4, "split", 84) + hdr(2, 173, "places", 98) + hdr(3, 393, "judge", 82) + hdr(4, 478, "search", 96)
-      + hdr(5, 713, "join judge", 122) + hdr(6, 870, "candidates", 128) + hdr(7, 1100, "search tree", 132);
+    h += `<rect x="0" y="0" width="336" height="56" rx="14" fill="var(--card)" stroke="var(--line)" stroke-width="2"/>
+      <text x="16" y="24" font-size="16">How many <tspan fill="var(--red)" font-weight="600">Riverside</tspan> <tspan fill="var(--red)" font-weight="600">bike trips</tspan> were</text>
+      <text x="16" y="46" font-size="16">made in <tspan fill="var(--red)" font-weight="600">2025</tspan>?</text>`;
+    // headers; the tinted boxes are the three steps that the LLM or the user can do
+    h += sbox(-6, 70, 144, 42) + sbox(346, 18, 86, 94) + sbox(660, 18, 114, 94)
+      + llm(114, 91, 0.48) + llm(389, 42, 0.58) + llm(717, 46, 0.62)
+      + `<g transform="translate(158 90)"><circle r="6" fill="none" stroke="var(--ink)" stroke-width="2"/><path d="M4.5 4.5l6 6" stroke="var(--ink)" stroke-width="2.4" stroke-linecap="round"/></g>`
+      + hdr(1, 4, "split", 70) + hdr(2, 182, "places", 90)
+      + `<g class="hdr" data-h="3"><rect x="350" y="62" width="78" height="46" rx="8"/><text class="n" x="357" y="82">3</text><text class="t" x="372" y="82">place</text><text class="t" x="372" y="100">judge</text></g>`
+      + hdr(4, 478, "combine", 104) + hdr(5, 672, "join judge", 106) + hdr(6, 832, "candidates", 124) + hdr(7, 1190, "search tree", 130);
     // 1: parts
     h += `<g data-s="1" data-keep>
-      <rect class="box" x="0" y="144" width="140" height="40" rx="10"/><text x="70" y="169" text-anchor="middle" font-size="15">bike trip</text>
-      <rect class="box" x="0" y="284" width="140" height="48" rx="10"/><text x="70" y="304" text-anchor="middle" font-size="14.5">place of the trip</text><text x="70" y="323" text-anchor="middle" font-size="14" font-weight="700" style="fill:var(--lake)">= Riverside</text>
-      <rect class="box" x="0" y="412" width="140" height="48" rx="10"/><text x="70" y="432" text-anchor="middle" font-size="14.5">date of the trip</text><text x="70" y="451" text-anchor="middle" font-size="14" font-weight="700" style="fill:var(--lake)">= 2025</text>
+      <rect class="box" x="0" y="136" width="132" height="40" rx="10"/><text x="66" y="161" text-anchor="middle" font-size="14.5">bike trip</text>
+      <rect class="box" x="0" y="244" width="132" height="48" rx="10"/><text x="66" y="264" text-anchor="middle" font-size="14">place of the trip</text><text x="66" y="283" text-anchor="middle" font-size="13.5" font-weight="700" style="fill:var(--lake)">= Riverside</text>
+      <rect class="box" x="0" y="346" width="132" height="68" rx="10"/><text x="66" y="366" text-anchor="middle" font-size="14">date of the trip</text><text x="66" y="385" text-anchor="middle" font-size="13" font-weight="700" style="fill:var(--lake)">from 2025-01-01</text><text x="66" y="403" text-anchor="middle" font-size="13" font-weight="700" style="fill:var(--lake)">to 2025-12-31</text>
     </g>`;
     // 2: places with their costs
-    h += `<g data-s="2" data-keep><text x="372" y="122" text-anchor="middle" class="small muted">cost</text>`;
-    [[164, 132, 196], [308, 244, 372], [436, 420, 452]].forEach(([c, a, b]) => {
-      h += `<path class="edge" d="M140 ${c}h12M152 ${a}V${b}M152 ${a}h10M152 ${b}h10"/>`;
-      ys.filter((y) => y > a && y < b).forEach((y) => { h += `<path class="edge" d="M152 ${y}h10"/>`; });
+    h += `<g data-s="2" data-keep><text x="330" y="122" text-anchor="middle" class="small ctext">cost</text>`;
+    [[156, 140, 172], [268, 220, 316], [380, 364, 396]].forEach(([c, a, b]) => {
+      h += `<path class="edge" d="M132 ${c}h8M140 ${a}V${b}M140 ${a}h8M140 ${b}h8"/>`;
+      ys.filter((y) => y > a && y < b).forEach((y) => { h += `<path class="edge" d="M140 ${y}h8"/>`; });
     });
-    places.forEach(([, col, cost, ok], i) => {
-      h += `<g class="prow" data-ok="${ok}"><rect class="chip" x="165" y="${ys[i] - 13}" width="180" height="26" rx="6"/>
-        <text x="175" y="${ys[i] + 4.5}" class="mono">${col}</text>
-        <text x="372" y="${ys[i] + 5}" text-anchor="middle" font-size="13" font-weight="600" style="fill:${i === 7 ? "var(--red-ink)" : "var(--ink)"}">${cost}</text></g>`;
+    places.forEach(([col, cost, ok], i) => {
+      h += `<g class="prow" data-ok="${ok}"><rect class="chip" x="150" y="${ys[i] - 13}" width="158" height="26" rx="6"/>
+        <text x="159" y="${ys[i] + 4.5}" class="mono">${col}</text>
+        <text x="330" y="${ys[i] + 5}" text-anchor="middle" font-size="13.5" class="ctext">${cost}</text></g>`;
     });
     h += `</g>`;
     // 3: the place judge
-    h += `<g data-s="3" data-keep>${places.map(([, , , ok], i) => mark(398, ys[i], ok)).join("")}</g>`;
-    // 4: search over the link graph
+    h += `<g data-s="3" data-keep>${places.map(([, , ok], i) => mark(376, ys[i], ok)).join("")}</g>`;
+    // 4: combine one kept place per part over the joinability graph
     h += `<g data-s="4" data-keep>
-      <rect class="box" x="470" y="118" width="222" height="236" rx="14"/>
-      <text x="484" y="140" class="small muted" font-weight="700" letter-spacing=".08em">BIKESHARE</text>
-      <path class="gedge hot" id="eStart" d="M540 224 C566 172 586 166 604 168"/>
-      <path class="gedge" d="M540 238 C580 226 594 196 610 180"/>
-      <path class="gedge" d="M540 240 C578 278 590 298 604 302"/>
-      <text x="548" y="180" class="small" style="fill:var(--red-ink)">start</text>
-      <text x="583" y="225" class="small muted">end</text>
-      <g class="tnode"><rect x="484" y="218" width="58" height="28" rx="6"/><text x="513" y="237" text-anchor="middle">trip</text></g>
-      <g class="tnode"><rect x="604" y="154" width="74" height="28" rx="6"/><text x="641" y="173" text-anchor="middle">station</text></g>
-      <g class="tnode"><rect x="604" y="288" width="64" height="28" rx="6"/><text x="636" y="307" text-anchor="middle">rider</text></g>
-      <rect x="470" y="370" width="222" height="96" rx="14" fill="none" stroke="var(--line)" stroke-width="1.4" stroke-dasharray="5 4"/>
-      <text x="484" y="392" class="small muted" font-weight="700" letter-spacing=".08em">MOBILITY</text>
-      <g class="tnode"><rect x="596" y="414" width="74" height="28" rx="6"/><text x="633" y="433" text-anchor="middle">survey</text></g>
-      ${still ? "" : `<circle class="pulse" r="5"><animateMotion dur="1.8s" repeatCount="indefinite" path="M540 224 C566 172 586 166 604 168"/></circle>`}
+      <path class="edge" d="M401 268H413" marker-end="url(#ahp)"/>
+      <rect class="box" x="416" y="118" width="204" height="302" rx="14"/>
+      <rect class="dbox" x="424" y="126" width="188" height="192" rx="10"/>
+      <text x="434" y="146" class="small muted" font-weight="700" letter-spacing=".08em">BIKESHARE</text>
+      <path class="gedge hot" id="eStart" d="M490 216C510 176 518 166 530 164"/>
+      <path class="gedge" d="M490 226C516 222 526 198 536 180"/>
+      <path class="gedge" d="M490 236C514 262 522 284 536 286"/>
+      <text x="476" y="184" class="small" style="fill:var(--red-ink)">start</text>
+      <text x="528" y="222" class="small muted">end</text>
+      <g class="tnode"><rect x="436" y="212" width="54" height="28" rx="6"/><text x="463" y="231" text-anchor="middle">trip</text></g>
+      <g class="tnode"><rect x="530" y="152" width="72" height="28" rx="6"/><text x="566" y="171" text-anchor="middle">station</text></g>
+      <g class="tnode"><rect x="536" y="272" width="60" height="28" rx="6"/><text x="566" y="291" text-anchor="middle">rider</text></g>
+      <rect class="dbox" x="424" y="328" width="188" height="84" rx="10"/>
+      <text x="434" y="348" class="small muted" font-weight="700" letter-spacing=".08em">MOBILITY</text>
+      <g class="tnode"><rect x="530" y="366" width="72" height="28" rx="6"/><text x="566" y="385" text-anchor="middle">survey</text></g>
+      ${still ? "" : `<circle class="pulse" r="5"><animateMotion dur="1.8s" repeatCount="indefinite" path="M490 216C510 176 518 166 530 164"/></circle>`}
     </g>`;
-    // 5: the join judge
+    // 5: the join judge, for the candidates whose two tables can be joined in several ways (x1 to x4)
     h += `<g data-s="5" data-keep>
-      <rect class="box" x="706" y="234" width="140" height="104" rx="12"/>
-      <text x="720" y="260" font-weight="700" font-size="14">trip → station</text>
-      <text x="720" y="292" font-size="14">on start</text><text x="720" y="322" font-size="14">on end</text>
-      ${mark(812, 287, 1)}${mark(812, 317, 1)}
+      <path class="edge" d="M622 268H633" marker-end="url(#ahp)"/>
+      <rect class="box" x="636" y="216" width="172" height="108" rx="12"/>
+      <text x="648" y="241" font-weight="700" font-size="14">trip ⋈ station</text>
+      <text x="648" y="273" class="mono" style="font-size:11px">start_station ⋈ id</text><text x="648" y="303" class="mono" style="font-size:11px">end_station ⋈ id</text>
+      ${mark(780, 269, 1)}${mark(780, 299, 1)}
     </g>`;
-    // 6: candidates, in the order of the leaves of the tree
+    // 6: candidates, in the order of the leaves of the tree; the brace: the join judge's joins are those of x1 to x4
     const cands = [["x₁", "trip, station", "district, start", "4.00"], ["x₂", "trip, station", "district, end", "4.00"],
       ["x₃", "trip, station", "name, start", "4.58"], ["x₄", "trip, station", "name, end", "4.58"],
-      ["x₅", "trip, rider", "home_district", "5.32"], ["x₆", "survey", "district", "5.17"]];
+      ["x₅", "trip, rider", "district", "5.32"], ["x₆", "survey", "district", "5.17"]];
     const cy = [140, 196, 252, 308, 364, 420];
-    h += `<g data-s="6" data-keep>${cands.map(([x, t, d, c], i) => `<g class="cand">
-      <rect x="862" y="${cy[i] - 22}" width="214" height="44" rx="9"/>
-      <text class="x" x="874" y="${cy[i] + 5}" font-size="15">${x}</text>
-      <text x="902" y="${cy[i] - 2}" font-size="14">${t}</text><text x="902" y="${cy[i] + 14}" class="small muted">${d}</text>
-      <text x="1066" y="${cy[i] + 5}" text-anchor="end" font-size="15" font-weight="700">${c}</text></g>`).join("")}</g>`;
-    // 7: the search tree, built from the candidates (its leaves) up to the root
-    const fork = (x, y, t, dy = -14) => `<g class="fork"><circle cx="${x}" cy="${y}" r="10"/><text x="${x}" y="${y + 4}" text-anchor="middle">?</text>
-      <text x="${x + 4}" y="${y + dy}" class="small" style="fill:var(--red-ink)">${t}</text></g>`;
+    h += `<g data-s="6" data-keep><text x="1016" y="113" text-anchor="end" class="small ctext">cost</text>
+      <path class="brace" d="M820 118Q815 118 815 126V262Q815 270 810 270Q815 270 815 278V322Q815 330 820 330"/>
+      ${cands.map(([x, t, d, c], i) => `<g class="cand">
+      <rect x="822" y="${cy[i] - 22}" width="202" height="44" rx="9"/>
+      <text class="x" x="832" y="${cy[i] + 5}" font-size="15">${x}</text>
+      <text x="860" y="${cy[i] - 2}" font-size="14">${t}</text><text x="860" y="${cy[i] + 14}" class="small muted">${d}</text>
+      <text x="1016" y="${cy[i] + 5}" text-anchor="end" font-size="15" class="ctext">${c}</text></g>`).join("")}</g>`;
+    // 7: the search tree, built fork by fork from the candidates (its leaves) up to the root.
+    // [fork, x, y, half width, upper option (from x, from y, name, share), lower option]
+    const forks = [
+      ["join?", 1084, 168, 26, [1024, 140, "start", ".50"], [1024, 196, "end", ".50"]],
+      ["join?", 1084, 280, 26, [1024, 252, "start", ".50"], [1024, 308, "end", ".50"]],
+      ["column?", 1176, 224, 36, [1110, 168, "district", ".60"], [1110, 280, "name", ".40"]],
+      ["table?", 1266, 294, 30, [1212, 224, "station", ".71"], [1024, 364, "rider", ".29"]],
+      ["database?", 1366, 357, 43, [1296, 294, "bikeshare", ".69"], [1024, 420, "mobility", ".31"]]];
+    const option = ([fx, fy, name, share], x, y, up) => {
+      const ly = up ? fy - 6 : fy + 15;
+      return `<path class="branch" d="M${fx} ${fy}H${x - 5}Q${x} ${fy} ${x} ${fy + (up ? 5 : -5)}V${y + (up ? -11 : 11)}"/>
+        <text x="${x - 5}" y="${ly}" text-anchor="end" class="small oname">${name}</text>
+        <rect class="shr" x="${x + 4}" y="${ly - 11}" width="27" height="15" rx="3"/><text x="${x + 17.5}" y="${ly}" text-anchor="middle" class="small sval">${share}</text>`;
+    };
     h += `<g data-s="7" data-keep>
-      <text x="1100" y="126" class="small muted">built bottom up, asked top down</text>
-      <path class="branch" d="M1078 140H1122V158M1078 196H1122V178M1078 252H1122V270M1078 308H1122V290"/>
-      <path class="branch" d="M1132 168H1174V214M1132 280H1174V234"/>
-      <path class="branch" d="M1184 224H1228V284M1078 364H1228V304"/>
-      <path class="branch" d="M1238 294H1282V347M1078 420H1282V367"/>
-      ${fork(1122, 168, "join")}${fork(1122, 280, "join", 26)}${fork(1174, 224, "column")}${fork(1228, 294, "table")}${fork(1282, 357, "database", 28).replace(/<text x="1286" y="385" class="small"/, '<text x="1266" y="361" text-anchor="end" class="small"')}
-      <use href="#i-person" x="1268" y="232" width="28" height="28" style="color:var(--red)"/>
-      <path class="branch" d="M1282 264V334" marker-end="url(#ahr)"/>
+      <g class="tw" style="--d:0"><text x="1200" y="126" class="small utext">built bottom up</text><path class="branch" d="M1200 136H1290" marker-end="url(#aht)"/></g>
+      ${forks.map(([t, x, y, w, a, b], i) => `<g class="tw" style="--d:${i}">${option(a, x, y, true)}${option(b, x, y, false)}
+        <g class="fork"><rect x="${x - w}" y="${y - 11}" width="${2 * w}" height="22" rx="6"/><text x="${x}" y="${y + 4.5}" text-anchor="middle">${t}</text></g></g>`).join("")}
+      <g class="tw" style="--d:5"><path class="asks" d="M1436 150V352Q1436 357 1431 357H1412" marker-end="url(#aht)"/>
+        <text x="1428" y="258" text-anchor="end" class="small utext">asked top down</text></g>
     </g>`;
-    // built once per lake
-    h += `<path d="M0 494H1320" stroke="var(--line)" stroke-dasharray="6 5" stroke-width="1.5"/>
-      <text x="0" y="516" class="small muted" font-weight="700" letter-spacing=".08em">BUILT ONCE PER LAKE</text>
-      <g transform="translate(0 534)"><ellipse cx="16" cy="6" rx="14" ry="5" fill="none" stroke="var(--lake)" stroke-width="1.6"/>
-        <path d="M2 6v22c0 3 6 5 14 5s14-2 14-5V6" fill="none" stroke="var(--lake)" stroke-width="1.6"/>
-        <text x="40" y="16" font-size="13.5" font-weight="600">bikeshare,</text><text x="40" y="33" font-size="13.5" font-weight="600">mobility</text></g>
-      <g class="off" data-o="2"><rect class="box" x="165" y="534" width="134" height="38" rx="9"/><text x="232" y="558" text-anchor="middle" font-size="13.5" font-weight="600">value index</text></g>
-      <g class="off" data-o="2 3"><rect class="box" x="309" y="534" width="148" height="38" rx="9"/><text x="383" y="551" text-anchor="middle" font-size="12.5" font-weight="600">descriptions,</text><text x="383" y="566" text-anchor="middle" font-size="12.5" font-weight="600">embeddings</text></g>
-      <g class="off" data-o="4 5"><rect class="box" x="490" y="534" width="182" height="38" rx="9"/><text x="581" y="558" text-anchor="middle" font-size="13.5" font-weight="600">links between tables</text></g>
-      <path class="edge" d="M232 534V470M330 534V470M581 534V470" marker-end="url(#ahp)"/>`;
+    // offline phase: the three structures, and the lake they are built from
+    h += `<path d="M-18 462H1456" stroke="var(--line)" stroke-dasharray="6 5" stroke-width="1.5"/>
+      <text x="0" y="486" class="small muted" font-weight="700" letter-spacing=".08em">OFFLINE PHASE</text>
+      <rect x="140" y="500" width="520" height="70" rx="12" fill="var(--soft-2)" stroke="var(--line)" stroke-width="1.4"/>
+      <path class="edge" d="M222 512V430" marker-end="url(#ahp)"/><path class="edge" d="M330 512V430" marker-end="url(#ahp)"/><path class="edge" d="M562 512V425" marker-end="url(#ahp)"/>
+      <g class="off" data-o="2"><rect class="box" x="152" y="512" width="140" height="46" rx="9"/><text x="222" y="531" text-anchor="middle" font-size="12.5" font-weight="600">value index,</text><text x="222" y="547" text-anchor="middle" font-size="12.5" font-weight="600">column profiles</text></g>
+      <g class="off" data-o="2 3"><rect class="box" x="304" y="512" width="200" height="46" rx="9"/><text x="404" y="539.5" text-anchor="middle" font-size="12.5" font-weight="600">descriptions, embeddings</text></g>
+      <g class="off" data-o="4 5"><rect class="box" x="516" y="512" width="132" height="46" rx="9"/><text x="582" y="539.5" text-anchor="middle" font-size="13" font-weight="600">joinability graph</text></g>
+      <path class="edge" d="M770 535H664" marker-end="url(#ahp)"/><text x="717" y="526" text-anchor="middle" class="small muted">used to build</text>
+      <rect class="lakebox" x="770" y="500" width="676" height="70" rx="12"/>
+      <ellipse cx="812" cy="526" rx="24" ry="11" fill="var(--lake-tint)" stroke="var(--lake)" stroke-width="1.4"/>
+      <path d="M798 524q4-4 8 0t8 0M806 530q4-4 8 0t8 0" fill="none" stroke="var(--lake)" stroke-width="1.3" stroke-linecap="round"/>
+      <text x="812" y="557" text-anchor="middle" font-size="12.5" font-weight="700" style="fill:var(--lake)">data lake</text>
+      <rect class="dbox fillc" x="858" y="508" width="372" height="54" rx="9"/>${db(870, 522, "bikeshare")}${tbl(870, 547, "trip")}${tbl(966, 547, "station")}${tbl(1090, 547, "rider")}
+      <rect class="dbox fillc" x="1242" y="508" width="192" height="54" rx="9"/>${db(1254, 522, "mobility")}${tbl(1254, 547, "survey")}`;
     add(g, `<defs><marker id="ahp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="arrowhead" d="M0 0 10 5 0 10Z"/></marker>
-      <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--red)"/></marker></defs>` + h);
+      <marker id="aht" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 10 5 0 10Z" fill="var(--teal)"/></marker>
+      <marker id="aho" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto"><path d="M1.5 1.5 10.5 6 1.5 10.5Z" fill="var(--card)" stroke="var(--teal)" stroke-width="1.4" stroke-linejoin="round"/></marker></defs>
+      <g transform="translate(30 46)">${h}</g>`);
     const rows = $$(".prow", g), marks = $$('[data-s="3"] > g', g);
     stepper({
       fig: $("#pipe"), n: 7, say: $("#pipeSay"), play: $("#pipePlay"), prev: $("#pipePrev"), next: $("#pipeNext"), stepsBox: $("#pipeSteps"),
-      labels: ["split", "places", "place judge", "search", "join judge", "candidates", "search tree"],
+      labels: ["split", "places", "place judge", "combine", "join judge", "candidates", "search tree"],
       texts: [
-        ["Split the question into parts", "An LLM splits the question into parts. Each part names one thing the question asks for or filters on, with its value when it gives one. The rest of the search works on each part on its own."],
-        ["Find the places of each part, with a cost", 'For each part, AMIGO lists the columns of the whole lake that may store it: the 30 closest by meaning, plus every column that stores its value. Each place gets a cost, lower when it is more likely: the cost grows with its rank by meaning, and rises when other places store the value of the part and this one does not. <code>trip.start_station</code> stores station ids, not "Riverside", so its cost rises.'],
-        ["The place judge keeps the places the user could mean", "For each place, an LLM answers yes or no: could the user mean this column for this part? A rider is not a trip, so <code>rider.id</code> is out. Fewer places keep the tree small."],
-        ["Search the joins, from the lowest cost up", "AMIGO joins one kept place per part through the links between tables. It finds the way to connect them at the lowest cost, exactly (a group Steiner tree), then the next one, and so on: the candidates come in exact order of cost, each once."],
-        ["The join judge picks the links", "Two tables can join on several links, and each link relates other rows: a trip meets a station where it starts or where it ends. An LLM keeps the links the user could mean. Here, both."],
-        ["Six candidates, each with a cost", 'A candidate is one table set: the cost of its places plus one cost per join. x₁ places the three parts in columns of cost 1 and needs one join: <span class="f">1 + 1 + 1 + 1 = 4</span>.'],
-        ["Arrange the candidates into a search tree", "The candidates are the leaves. Each fork is a question AMIGO can ask the user: which database, table, column or join. With no user, AMIGO keeps every leaf. Try it in the next section."],
+        ["Split the question into parts", "An LLM splits the question into parts. Each part names one thing the question asks for or filters on, with its value when it gives one. The rest of the search works on each part on its own. The user can write the parts, or correct them."],
+        ["Find the places of each part, with a cost", "For each part, AMIGO lists the columns of the whole lake that may store it: the 30 closest to it in the embedding index, plus every column that stores its value, found in the value index. Each place gets a cost, lower when it is more likely. The cost grows with the rank of the column by similarity, and rises when other places store the value of the part and this one does not."],
+        ["The place judge keeps the places the user could mean", "For each place, an LLM answers yes or no: could the user mean this column for this part? A rider is not a trip, so <code>rider.id</code> is out. Fewer places keep the tree small. The user can answer in place of the LLM, or correct its answers."],
+        ["Combine one kept place per part, lowest cost first", "AMIGO takes one kept place per part and joins their tables through the joinability graph. It finds the combination of lowest cost exactly (a group Steiner tree), then the next one, and so on: the candidates come in exact order of cost, each once."],
+        ["The join judge picks the valid joins", "The same two tables can be joined in several ways, and each way relates other rows: a trip meets a station where it starts or where it ends. An LLM keeps the joins the user could mean. Here, both, so x₁ to x₄ come in pairs. The user can pick the joins in place of the LLM, or correct its picks."],
+        ["Six candidates, each with a cost", 'A candidate is one table set. Its cost is the sum of the costs of its places, plus one cost per join. x₁ places the three parts in columns of cost 1 and needs one join of cost 1: <span class="f">1 + 1 + 1 + 1 = 4</span>.'],
+        ["Arrange the candidates into a search tree", "The tree is built bottom up, fork by fork. The candidates are the leaves. Each fork is a question AMIGO can ask the user: which join, column, table or database. Each branch carries its share of the fork: the likelier option has the larger share and is shown first. With no user, AMIGO keeps every leaf. Try it in the next section."],
       ],
       onStep: (k) => {
         rows.forEach((r) => r.classList.toggle("row-off", k >= 3 && r.dataset.ok === "0"));
@@ -550,7 +590,7 @@
       <g transform="translate(424 200)"><circle r="15" fill="none" stroke="var(--ink)" stroke-width="3"/><path d="M11 11l12 12" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/></g>
       <text x="430" y="252" text-anchor="middle" class="small muted">search</text><text x="430" y="266" text-anchor="middle" class="small muted">the lake</text>
       ${[[90, "meaning"], [140, "keywords"], [190, "spelling"], [240, "values"]].map(([y, t]) => `<path class="edge" d="M452 202C478 202 470 ${y} 500 ${y}H560"/><text x="510" y="${y - 6}" class="small muted">${t}</text>`).join("")}
-      ${["station.name", "rider.home_district", "survey.district", "trip.start_station"].map((t, i) => `<rect class="chip" x="566" y="${77 + i * 50}" width="188" height="26" rx="6"/><text x="576" y="${94.5 + i * 50}" class="mono">${t}</text>`).join("")}
+      ${["station.name", "rider.district", "survey.district", "trip.start_station"].map((t, i) => `<rect class="chip" x="566" y="${77 + i * 50}" width="188" height="26" rx="6"/><text x="576" y="${94.5 + i * 50}" class="mono">${t}</text>`).join("")}
     </g>`;
     // 3: votes; the decoy is planted here
     const votes = [[1, 1, 1], [1, 1, 0], [1, 1, 1], [1, 0, 0]];

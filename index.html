@@ -798,11 +798,10 @@
   <section class="card" id="forks">
     <div class="head"><span class="tile">07</span><h2>The tree measures how hard a question is</h2></div>
     <p>Harder questions get wider trees. The number of forks grows overall with the number of valid table sets of a question (its ambiguity) and with the number of tables it needs (its complexity).</p>
-    <div class="seg" role="group" aria-label="Measure" id="forkSeg">
-      <button type="button" data-k="labeled_sets" aria-pressed="true">Ambiguity: valid table sets</button>
-      <button type="button" data-k="tables" aria-pressed="false">Complexity: tables needed</button>
+    <div class="two" style="margin-top: 10px">
+      <div class="chart"><h4>Ambiguity: valid table sets</h4><div id="forkAmb"></div></div>
+      <div class="chart"><h4>Complexity: tables needed</h4><div id="forkCx"></div></div>
     </div>
-    <div id="forkChart" class="chart" style="max-width: 760px; margin-top: 10px"></div>
     <p class="note">Mean forks per question with its 95% bootstrap interval. Groups of fewer than 20 questions are left out.</p>
   </section>
 

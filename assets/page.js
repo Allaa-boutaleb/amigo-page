@@ -859,11 +859,10 @@
 
   // ------------------------------------------------------------------ 07 forks against ambiguity and complexity
   (function forks() {
-    const box = $("#forkChart");
     const cols = { BIRD: ["var(--purple)", "circle"], Spider: ["var(--orange)", "square"], MMQA: ["var(--teal)", "triangle"] };
     const W = 720, H = 330, m = { l: 48, r: 90, t: 16, b: 46 };
-    let key = "labeled_sets";
-    function draw(animate) {
+    // the two measures side by side, on the same forks axis
+    function draw(box, key, animate) {
       const X = (x) => m.l + ((x - 0.7) / 3.6) * (W - m.l - m.r), Y = (v) => H - m.b - (v / 9) * (H - m.t - m.b);
       let h = `<g class="grid">${[0, 2, 4, 6, 8].map((v) => `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}"/>`).join("")}</g>
         <g class="axis">${[0, 2, 4, 6, 8].map((v) => `<text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end">${v}</text>`).join("")}
@@ -891,10 +890,11 @@
       box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forks per question against ${key === "tables" ? "the tables needed" : "the valid table sets"}">${h}</svg>`;
       if (animate) twoFrames(() => $$(".fl", box).forEach((p) => p.setAttribute("stroke-dashoffset", 0)));
     }
-    box.addEventListener("mousemove", (e) => { const p = e.target.closest(".fp"); if (p) showTip(e, p.dataset.t); else hideTip(); });
-    box.addEventListener("mouseleave", hideTip);
-    $$("#forkSeg button").forEach((b) => b.addEventListener("click", () => { key = b.dataset.k; $$("#forkSeg button").forEach((x) => x.setAttribute("aria-pressed", x === b)); draw(!still); }));
-    draw(false);
-    if (!still) whenSeen(box, () => draw(true), 0.3);
+    [[$("#forkAmb"), "labeled_sets"], [$("#forkCx"), "tables"]].forEach(([box, key]) => {
+      box.addEventListener("mousemove", (e) => { const p = e.target.closest(".fp"); if (p) showTip(e, p.dataset.t); else hideTip(); });
+      box.addEventListener("mouseleave", hideTip);
+      draw(box, key, false);
+      if (!still) whenSeen(box, () => draw(box, key, true), 0.3);
+    });
   })();
 })();
